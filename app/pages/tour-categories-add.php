@@ -4,11 +4,12 @@
     <div class="container">
         <div class="page-header">
             <h1 class="page-title">
-                <h1 class="page-title">  Tur Kategorie hinzufügen</h1>
+                <h1 class="page-title"> Tour Kategorie hinzufügen</h1>
             </h1>
             <div class="page-options d-flex ">
                 <div class="page-subtitle ">
-                    <a href="tour-categories"  class="btn btn-sm btn-orange mr-4"> <i class="fa fa-long-arrow-left"></i> Zurück zu den Tour Kategorie   </a>
+                    <a href="tour-categories" class="btn btn-sm btn-orange mr-4"> <i class="fa fa-long-arrow-left"></i>
+                        Zurück zu den Tour Kategorie </a>
                 </div>
             </div>
         </div>
@@ -20,18 +21,18 @@
                         <div class="col-md-8 col-lg-8">
                             <div class="form-group">
                                 <label class="form-label">Kategorie Name</label>
-                                <input type="text" class="form-control" name="name">
+                                <input type="text" class="form-control" name="name" required>
                             </div>
-
                         </div>
                         <div class="col-md-4 col-lg-4">
                             <fieldset class="form-fieldset">
 
                                 <div class="form-group">
-                                    <label class="form-label">  Anzeigen?</label>
+                                    <label class="form-label"> Anzeigen?</label>
                                     <div class="selectgroup w-100">
                                         <label class="selectgroup-item">
-                                            <input type="radio" name="status" value="1" class="selectgroup-input" checked="">
+                                            <input type="radio" name="status" value="1" class="selectgroup-input"
+                                                checked>
                                             <span class="selectgroup-button">Ja, anzeigen.</span>
                                         </label>
                                         <label class="selectgroup-item">
@@ -41,7 +42,10 @@
                                     </div>
                                 </div>
 
-                                <button type="submit"   onclick="kobySubmit('?do=tour-categories&q=add','tour-categories')" class="btn btn-block btn-success btn-lg"> Speichern und Schließen <i class="fe fe-save"></i>  </button>
+                                <button type="submit"
+                                    onclick="kobySubmit('?do=tour-categories&q=add','tour-categories')"
+                                    class="btn btn-block btn-success btn-lg"> Speichern und Schließen <i
+                                        class="fe fe-save"></i> </button>
 
                             </fieldset>
                         </div>
@@ -52,3 +56,30 @@
     </div>
 </div>
 
+<?php
+// Handle form submission and save category
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Sanitize input
+    $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING);
+    $status = filter_input(INPUT_POST, 'status', FILTER_SANITIZE_NUMBER_INT);
+
+    // Check if fields are not empty
+    if (!empty($name)) {
+        // Prepare the SQL query to prevent SQL injection
+        $stmt = $con->prepare("INSERT INTO the_tour_category (name, status) VALUES (?, ?)");
+        $stmt->bind_param("si", $name, $status); // "si" means string and integer
+        $stmt->execute();
+
+        // Redirect or give feedback after insert
+        if ($stmt->affected_rows > 0) {
+            // Redirect or display success message
+            header("Location: tour-categories");
+            exit;
+        } else {
+            echo "Fehler beim Hinzufügen der Kategorie.";
+        }
+    } else {
+        echo "Bitte geben Sie einen Namen für die Kategorie ein.";
+    }
+}
+?>

@@ -3,16 +3,15 @@
     <div class="container">
         <div class="page-header">
             <h1 class="page-title">
-                <h1 class="page-title">  Special hinzufügen</h1>
+                Special hinzufügen
             </h1>
             <div class="page-options d-flex ">
                 <div class="page-subtitle ">
-                    <a href="hotel-features"  class="btn btn-sm btn-orange mr-4"> <i class="fa fa-long-arrow-left"></i> Özelliklere Geri Dön   </a>
+                    <a href="hotel-features" class="btn btn-sm btn-orange mr-4"> <i class="fa fa-long-arrow-left"></i>
+                        Özelliklere Geri Dön </a>
                 </div>
             </div>
         </div>
-
-
 
         <div class="card">
             <form id="koby_form" method="POST" onsubmit="return false" action="" enctype="multipart/form-data">
@@ -20,39 +19,38 @@
                     <div class="row">
                         <div class="col-md-8 col-lg-8">
                             <div class="form-group">
-                                <label class="form-label"> Special Name</label>
+                                <label class="form-label">Special Name</label>
                                 <input type="text" class="form-control" name="name">
                             </div>
-
-
                         </div>
                         <div class="col-md-4 col-lg-4">
                             <fieldset class="form-fieldset">
 
-
                                 <div class="form-group">
                                     <label class="form-label">Zugeordnet zur Gruppe</label>
-                                    <select name="feature_group_id" id="feature_group_id" class="form-control custom-select">
+                                    <select name="feature_group_id" id="feature_group_id"
+                                        class="form-control custom-select">
                                         <option value="0"> Lütfen Seçiniz</option>
                                         <?php
-                                        $ozellikGruplari = $db->get_results("SELECT * FROM the_hotel_room_features_group ORDER BY name ASC");
-                                        foreach ($ozellikGruplari as $ozellikGrup){
+                                        $ozellikGruplari = $con->query("SELECT * FROM the_hotel_room_features_group ORDER BY name ASC");
+                                        while ($ozellikGrup = $ozellikGruplari->fetch_object()) {
                                             ?>
-                                            <option value="<?=$ozellikGrup->features_gid?>"><?=$ozellikGrup->name?></option>
-                                        <?php }  ?>
+                                            <option value="<?= $ozellikGrup->features_gid ?>"><?= $ozellikGrup->name ?></option>
+                                        <?php } ?>
                                     </select>
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="form-label"> Special Rank</label>
+                                    <label class="form-label">Special Rank</label>
                                     <input type="number" class="form-control" name="rank" value="1">
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="form-label">  Anzeigen?</label>
+                                    <label class="form-label">Anzeigen?</label>
                                     <div class="selectgroup w-100">
                                         <label class="selectgroup-item">
-                                            <input type="radio" name="status" value="1" class="selectgroup-input" checked="">
+                                            <input type="radio" name="status" value="1" class="selectgroup-input"
+                                                checked="">
                                             <span class="selectgroup-button">Ja, anzeigen.</span>
                                         </label>
                                         <label class="selectgroup-item">
@@ -62,8 +60,9 @@
                                     </div>
                                 </div>
 
-                                <button type="submit"   onclick="kobySubmit('?do=hotel-features&q=add','hotel-features')" class="btn btn-block btn-success btn-lg"> Speichern und Schließen <i class="fe fe-save"></i>  </button>
-
+                                <button type="submit" onclick="kobySubmit('?do=hotel-features&q=add','hotel-features')"
+                                    class="btn btn-block btn-success btn-lg">Speichern und Schließen <i
+                                        class="fe fe-save"></i></button>
 
                             </fieldset>
                         </div>
@@ -73,4 +72,3 @@
         </div>
     </div>
 </div>
-

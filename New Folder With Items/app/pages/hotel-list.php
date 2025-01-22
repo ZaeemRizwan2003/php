@@ -29,8 +29,9 @@
                         <tbody>
 
                         <?php
-                            $list = $db->get_results("SELECT * FROM the_hotel ORDER BY hotel_id DESC");
-                            foreach ($list as $view){
+                            // Retrieve all hotels from the database
+                            $list = $con->query("SELECT * FROM the_hotel ORDER BY hotel_id DESC");
+                            while ($view = $list->fetch_object()) {
                         ?>
 
                             <tr>
@@ -41,7 +42,8 @@
                                 </th>
                                 <th>
                                     <?php
-                                        $hotelCategory = $db->get_row("SELECT * FROM the_hotel_category WHERE category_id = '$view->hotel_category_id' ");
+                                        // Retrieve the hotel category for each hotel
+                                        $hotelCategory = $con->query("SELECT * FROM the_hotel_category WHERE category_id = '$view->hotel_category_id'")->fetch_object();
                                         echo $hotelCategory->name;
                                     ?>
                                 </th>

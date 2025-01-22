@@ -3,9 +3,7 @@
 <div class="my-3 my-md-5">
     <div class="container">
         <div class="page-header">
-            <h1 class="page-title">
-                <h1 class="page-title">  Gegend</h1>
-            </h1>
+            <h1 class="page-title">Gegend</h1>
         </div>
 
         <div class="card">
@@ -17,40 +15,48 @@
                                 <label class="form-label">Semt Adı</label>
                                 <input type="text" class="form-control" name="name">
                             </div>
-
                         </div>
+
                         <div class="col-md-4 col-lg-4">
                             <fieldset class="form-fieldset">
 
                                 <div class="form-group">
                                     <label class="form-label">Stadt auswählen</label>
-                                    <select class="form-control " name="il_id" id="il" style="width: 100%;">
-                                        <option value="0">  Stadt auswählen </option>
+                                    <select class="form-control" name="il_id" id="il" style="width: 100%;">
+                                        <option value="0">Stadt auswählen</option>
                                         <?php
-                                        $iller = $db->get_results("SELECT * FROM il");
-                                        foreach($iller as $il){
+                                        // Use prepared statement to fetch cities
+                                        $stmt = $con->prepare("SELECT * FROM il");
+                                        $stmt->execute();
+                                        $result = $stmt->get_result();
+                                        while ($il = $result->fetch_object()) {
                                             ?>
-                                            <option value="<?php echo $il->id; ?>"> <?php echo $il->il_adi; ?> </option>
-                                        <?php } ?>
+                                            <option value="<?= $il->id ?>">
+                                                <?= htmlspecialchars($il->il_adi, ENT_QUOTES, 'UTF-8') ?></option>
+                                        <?php }
+                                        $stmt->close();
+                                        ?>
                                     </select>
                                 </div>
+
                                 <div class="form-group">
                                     <label class="form-label">Region auswählen</label>
-                                    <select class="form-control " name="ilce_id" id="ilce" style="width: 100%;">
-                                        <option value="0">  Stadt auswählen </option>
+                                    <select class="form-control" name="ilce_id" id="ilce" style="width: 100%;">
+                                        <option value="0">Stadt auswählen</option>
                                     </select>
                                 </div>
+
                                 <script src="assets/js/selectchained.js" type="text/javascript"></script>
                                 <script>
                                     $("#ilce").remoteChained("#il", "req/ajax.php?do=il-ilce&q=secim&ilce=83");
                                 </script>
 
-
                                 <div class="form-group">
-                                    <label class="form-label">  Anzeigen?</label>
+                                    <label class="form-label">Anzeigen?</label>
                                     <div class="selectgroup w-100">
                                         <label class="selectgroup-item">
-                                            <input type="radio" name="status" value="1" class="selectgroup-input" checked>
+                                            <input type="radio" name="status" value="1" class="selectgroup-input"
+                                                checked>
                                             <span class="selectgroup-button">Ja, anzeigen.</span>
                                         </label>
                                         <label class="selectgroup-item">
@@ -60,7 +66,9 @@
                                     </div>
                                 </div>
 
-                                <button type="submit"   onclick="kobySubmit('?do=district&q=add','district-list')" class="btn btn-block btn-success btn-lg"> Speichern und Schließen <i class="fe fe-save"></i>  </button>
+                                <button type="submit" onclick="kobySubmit('?do=district&q=add','district-list')"
+                                    class="btn btn-block btn-success btn-lg">Speichern und Schließen <i
+                                        class="fe fe-save"></i></button>
                             </fieldset>
                         </div>
                     </div>
@@ -69,4 +77,3 @@
         </div>
     </div>
 </div>
-

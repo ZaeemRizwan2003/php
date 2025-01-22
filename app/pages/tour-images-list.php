@@ -1,34 +1,46 @@
 <?php echo !defined("ADMIN") ? die("Hacking?") : null; ?>
 <?php
 $id = g('id');
-$view = $db->get_row("SELECT * FROM the_tour WHERE tour_id = '$id'");
-$rows = $db->get_var("SELECT * FROM the_tour_picture WHERE tour_id = '$id'");
+$stmt = $con->prepare("SELECT * FROM the_tour WHERE tour_id = ?");
+$stmt->bind_param('i', $id);
+$stmt->execute();
+$view = $stmt->get_result()->fetch_object();
+
+$stmt2 = $con->prepare("SELECT * FROM the_tour_picture WHERE tour_id = ?");
+$stmt2->bind_param('i', $id);
+$stmt2->execute();
+$rows = $stmt2->get_result()->num_rows;
 ?>
 
 <div class="my-3 my-md-5">
     <div class="container">
         <div class="page-header">
             <h1 class="page-title">
-                <strong> <?=$view->name?> </strong> İsimli Tur'a Ait Resimler
+                <strong> <?= htmlspecialchars($view->name) ?> </strong> İsimli Tur'a Ait Resimler
             </h1>
         </div>
-        <form action="tour-images-list?id=<?=$id?>" method="POST">
+        <form action="tour-images-list?id=<?= htmlspecialchars($id) ?>" method="POST">
             <div class="card">
                 <div class="card-header" style="display: block;">
                     <div>
                         <?php
-                            if($_POST){
-                                if(isset($_POST['tumresimler'])) {
+                            if ($_POST) {
+                                if (isset($_POST['tumresimler'])) {
                                     $resimler = $_POST['tumresimler'];
-                                    foreach($resimler as $resim) {
-                                        $bul = $db->get_row("SELECT * FROM the_tour_picture WHERE picture_id = '$resim'");
-                                        unlink('../data/tour/pictures/'.$bul->mini_picture);
-                                        unlink('../data/tour/pictures/'.$bul->big_picture);
-                                        $sil = $db->query("DELETE FROM the_tour_picture  WHERE picture_id = '$resim'");
+                                    foreach ($resimler as $resim) {
+                                        $stmt3 = $con->prepare("SELECT * FROM the_tour_picture WHERE picture_id = ?");
+                                        $stmt3->bind_param('i', $resim);
+                                        $stmt3->execute();
+                                        $bul = $stmt3->get_result()->fetch_object();
+                                        unlink('../data/tour/pictures/' . $bul->mini_picture);
+                                        unlink('../data/tour/pictures/' . $bul->big_picture);
+                                        $stmt4 = $con->prepare("DELETE FROM the_tour_picture WHERE picture_id = ?");
+                                        $stmt4->bind_param('i', $resim);
+                                        $stmt4->execute();
                                     }
-                                    if($sil){
+                                    if ($stmt4->affected_rows > 0) {
                                         echo '<div class="alert alert-success">Tüm resimler temizlendi.</div>';
-                                    }else{
+                                    } else {
                                         echo '<div class="alert alert-danger">Resimler silinemedi.</div>';
                                     }
                                 } else {
@@ -37,11 +49,11 @@ $rows = $db->get_var("SELECT * FROM the_tour_picture WHERE tour_id = '$id'");
                             }
                         ?>
                     </div>
-                    <a href="tour-images-add?id=<?=$id?>" class="btn btn-success"> <i class="fe fe-plus"></i>  Resim Ekle </a>
-                    <?php if($rows){ ?>
-                    <button type="submit"  class="btn btn-danger pull-right mr-4"> <i class="fe fe-trash"></i>  Seçilen Resimleri Sil</button>
+                    <a href="tour-images-add?id=<?= htmlspecialchars($id) ?>" class="btn btn-success"> <i class="fe fe-plus"></i>  Resim Ekle </a>
+                    <?php if ($rows) { ?>
+                    <button type="submit" class="btn btn-danger pull-right mr-4"> <i class="fe fe-trash"></i>  Seçilen Resimleri Sil</button>
                     <label class="custom-control custom-checkbox pull-right mr-4 mt-2">
-                        <input  onclick="toggle(this);" type="checkbox" class="custom-control-input" name="example-checkbox1" value="option1" >
+                        <input onclick="toggle(this);" type="checkbox" class="custom-control-input" name="example-checkbox1" value="option1" >
                         <span class="custom-control-label">Hepsini Seç</span>
                     </label>
                     <?php } ?>
@@ -58,7 +70,7 @@ $rows = $db->get_var("SELECT * FROM the_tour_picture WHERE tour_id = '$id'");
 
                 <div class="card-body">
                     <table class="table card-table table-vcenter text-nowrap" id="koby_table">
-                            <thead>
+                        <thead>
                             <tr>
                                 <th class="nosort">Seç</th>
                                 <th class="nosort">#Sıra</th>
@@ -66,44 +78,47 @@ $rows = $db->get_var("SELECT * FROM the_tour_picture WHERE tour_id = '$id'");
                                 <th>Info zur Tour</th>
                                 <th class="nosort text-center">Aktionen</th>
                             </tr>
-                            </thead>
-                            <tbody>
+                        </thead>
+                        <tbody>
 
-                            <?php
-                            $list = $db->get_results("SELECT * FROM the_tour_picture WHERE tour_id = '$id' ORDER BY rank ASC");
-                            foreach ($list as $view){
-                                ?>
+                        <?php
+                        // Prepare and execute statement for images
+                        $stmt5 = $con->prepare("SELECT * FROM the_tour_picture WHERE tour_id = ? ORDER BY rank ASC");
+                        $stmt5->bind_param('i', $id);
+                        $stmt5->execute();
+                        $result = $stmt5->get_result();
+                        
+                        while ($view = $result->fetch_object()) {
+                            ?>
 
-                                <tr>
-                                    <td><input type="checkbox" name="tumresimler[]" value="<?=$view->picture_id?>"/></td>
-                                    <td id="<?=$view->sira?>">
-                                        <div class="none"><?=$view->sira?></div>
-                                        <input type="number" class="form-control" style="width: 70px" onchange="rankChange(this,'?do=tour&q=pic-rank')" value="<?=$view->rank?>" name="rank" id="<?=$view->picture_id?>" >
-                                    </td>
-                                    <th>
-                                        <div class="none"><?=$view->mini_picture?></div>
-                                        <a href="#">
-                                            <img src="../data/tour/pictures/<?=$view->mini_picture?>" class="img-fluid img-thumbnail" width="100" >
-                                        </a>
-                                    </th>
+                            <tr>
+                                <td><input type="checkbox" name="tumresimler[]" value="<?= htmlspecialchars($view->picture_id) ?>"/></td>
+                                <td id="<?= htmlspecialchars($view->sira) ?>">
+                                    <div class="none"><?= htmlspecialchars($view->sira) ?></div>
+                                    <input type="number" class="form-control" style="width: 70px" onchange="rankChange(this,'?do=tour&q=pic-rank')" value="<?= htmlspecialchars($view->rank) ?>" name="rank" id="<?= htmlspecialchars($view->picture_id) ?>" >
+                                </td>
+                                <th>
+                                    <div class="none"><?= htmlspecialchars($view->mini_picture) ?></div>
+                                    <a href="#">
+                                        <img src="../data/tour/pictures/<?= htmlspecialchars($view->mini_picture) ?>" class="img-fluid img-thumbnail" width="100" >
+                                    </a>
+                                </th>
 
-                                    <th>
-                                        <div class="none"><?=$view->content?></div>
-                                        <h6>Info zur Tour</h6>
-                                        <textarea name="content" class="form-control" onchange="contentChange(this,'?do=tour&q=pic-content')" id="<?=$view->picture_id?>" cols="30" rows="3"><?=$view->content?></textarea>
-                                    </th>
-                                    <th class="text-center">
-                                        <a href="javascript:void(0)" onclick="kobySingle('<?=$view->tour_id?>','?do=tour&q=pic-delete&id=<?=$view->picture_id?>','tour-images-list?id=<?=$id?>')" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Löschen"><i class="fe fe-trash"></i> </a>
-                                    </th>
-                                </tr>
-                            <?php } ?>
+                                <th>
+                                    <div class="none"><?= htmlspecialchars($view->content) ?></div>
+                                    <h6>Info zur Tour</h6>
+                                    <textarea name="content" class="form-control" onchange="contentChange(this,'?do=tour&q=pic-content')" id="<?= htmlspecialchars($view->picture_id) ?>" cols="30" rows="3"><?= htmlspecialchars($view->content) ?></textarea>
+                                </th>
+                                <th class="text-center">
+                                    <a href="javascript:void(0)" onclick="kobySingle('<?= htmlspecialchars($view->tour_id) ?>','?do=tour&q=pic-delete&id=<?= htmlspecialchars($view->picture_id) ?>','tour-images-list?id=<?= htmlspecialchars($id) ?>')" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Löschen"><i class="fe fe-trash"></i> </a>
+                                </th>
+                            </tr>
+                        <?php } ?>
 
-                            </tbody>
-                        </table>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </form>
     </div>
 </div>
-
-

@@ -1,13 +1,28 @@
 <?php require_once 'req/start.php'; ?>
 <?php require_once 'req/head_start.php'; ?>
 <?php
-    $link = g('link');
-    $id = g('id');
+    $link = filter_input(INPUT_GET, 'link', FILTER_SANITIZE_STRING);
+    $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
+
     if($link || $id ){
-        $sorgu = $db->get_var("SELECT COUNT(*) FROM the_blog WHERE blog_category_id = '$id' AND status = 1");
-        $blogKatDetail = $db->get_row("SELECT * FROM the_blog_category WHERE category_id = '$id'");
-    }else{
-        $sorgu = $db->get_var("SELECT COUNT(*) FROM the_blog WHERE status = 1");
+        $stmt = $con->prepare("SELECT COUNT(*) FROM the_blog WHERE blog_category_id = ? AND status = 1");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->bind_result($sorgu);
+        $stmt->fetch();
+        $stmt->close();
+
+        $stmt = $con->prepare("SELECT * FROM the_blog_category WHERE category_id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $blogKatDetail = $stmt->get_result()->fetch_object();
+        $stmt->close();
+    } else {
+        $stmt = $con->prepare("SELECT COUNT(*) FROM the_blog WHERE status = 1");
+        $stmt->execute();
+        $stmt->bind_result($sorgu);
+        $stmt->fetch();
+        $stmt->close();
     }
 ?>
 <title><?=$general['site_title']->value;?></title>
@@ -24,7 +39,7 @@
                 <div class="container">
                     <?php if($link || $id ){ ?>
                         <h1 class="fadeInUp"><span></span> <?=$blogKatDetail->name?></h1>
-                    <?php }else{ ?>
+                    <?php } else { ?>
                         <h1 class="fadeInUp"><span></span> Blog</h1>
                     <?php } ?>
                 </div>
@@ -37,7 +52,7 @@
                 <div class="col-lg-9">
                     <?php if ($sorgu) { ?>
                         <?php
-                            @$sayfa = $_GET["sayfa"];
+                            @$sayfa = filter_input(INPUT_GET, "sayfa", FILTER_SANITIZE_NUMBER_INT);
                             if (empty($sayfa) || !is_numeric($sayfa)){
                                 $sayfa = 1;
                             }
@@ -45,12 +60,18 @@
                             $ksayisi = $sorgu;
                             $ssayisi = ceil($ksayisi / $kacar);
                             $nereden = ($sayfa * $kacar) - $kacar;
+
                             if($link || $id ){
-                                $oteller = $db->get_results("SELECT * FROM the_blog WHERE blog_category_id = '$id' AND status = 1 ORDER BY created_at DESC LIMIT $kacar OFFSET $nereden");
-                            }else{
-                                $oteller = $db->get_results("SELECT * FROM the_blog WHERE status = 1 ORDER BY created_at DESC  LIMIT $kacar OFFSET $nereden");
+                                $stmt = $con->prepare("SELECT * FROM the_blog WHERE blog_category_id = ? AND status = 1 ORDER BY created_at DESC LIMIT ? OFFSET ?");
+                                $stmt->bind_param("iii", $id, $kacar, $nereden);
+                            } else {
+                                $stmt = $con->prepare("SELECT * FROM the_blog WHERE status = 1 ORDER BY created_at DESC LIMIT ? OFFSET ?");
+                                $stmt->bind_param("ii", $kacar, $nereden);
                             }
-                            foreach ($oteller as $blog){
+
+                            $stmt->execute();
+                            $result = $stmt->get_result();
+                            while ($blog = $result->fetch_object()) {
                         ?>
 
                         <article class="blog wow fadeIn">
@@ -60,7 +81,7 @@
                                         <a href="text/<?=$blog->slug?>/<?=$blog->blog_id?>">
                                             <?php if($blog->picture){ ?>
                                             <img src="data/blog/<?=$blog->picture?>" alt="">
-                                            <?php }else{ ?>
+                                            <?php } else { ?>
                                                 <img src="lib/img/blog-1.jpg" alt="">
                                             <?php } ?>
                                             <div class="preview"><span>Read more</span></div>
@@ -83,33 +104,23 @@
                             <div class="gap gap-small"></div>
                             <div class="col-md-12">
                                 <nav class="text-center">
-                                    <!--
-                                    <ul class="pagination category-pagination ">
-                                        <?php
-                                        for($s = 1; $s <= $ssayisi; $s++) {
-                                            echo '<li class="page-item"><a class="page-link" href="blog/kategori/'.$blogKatDetail->slug.'/'.$blogKatDetail->category_id.'/'.$s.'#page_content_start">'.$s.' <i class="fa fa-angle-right"></i> </a></li>';
-                                        }
-                                        ?>
-                                    </ul>
-                                    !-->
-
                                     <hr>
                                     <ul class="pagination category-pagination ">
                                         <?php
-                                        if( $sayfa > 1 )
+                                        if($sayfa > 1)
                                         {
                                             echo '<li class="page-item"><a class="page-link" href="blog/kategori/'.$blogKatDetail->slug.'/'.$blogKatDetail->category_id.'">Zuerst</a></li>';
                                         }
 
-                                        for( $i = $sayfa - 3; $i < $sayfa + 4; $i++ )
+                                        for($i = $sayfa - 3; $i < $sayfa + 4; $i++)
                                         {
-                                            if( $i > 0 && $i <= $ssayisi )
+                                            if($i > 0 && $i <= $ssayisi)
                                             {
                                                 echo '<li class=" page-item '.($i == $sayfa ? 'active' : '').'"><a class="page-link" href="blog/kategori/'.$blogKatDetail->slug.'/'.$blogKatDetail->category_id.'/'.$i.'">'.$i.'</a></li>';
                                             }
                                         }
 
-                                        if( $sayfa != $ssayisi )
+                                        if($sayfa != $ssayisi)
                                         {
                                             echo '<li class="page-item"><a class="page-link" href="blog/kategori/'.$blogKatDetail->slug.'/'.$blogKatDetail->category_id.'/'.($ssayisi).'">Letzte Seite</a></li>';
                                         }
@@ -118,39 +129,28 @@
                                 </nav>
                             </div>
                         <?php } ?>
-
                     <?php } else{ ?>
                         <?php if($ssayisi > 1){ ?>
                             <div class="gap gap-small"></div>
                             <div class="col-md-12">
                                 <nav class="text-center">
-                                    <!--
-                                                    <ul class="pagination category-pagination ">
-                                                        <?php
-                                    for($s = 1; $s <= $ssayisi; $s++) {
-                                        echo '<li class="page-item"><a class="page-link" href="blog/sayfa/'.$s.'#page_content_start">'.$s.' <i class="fa fa-angle-right"></i> </a></li>';
-                                    }
-                                    ?>
-                                                    </ul>
-                                                    !-->
-
                                     <hr>
                                     <ul class="pagination category-pagination ">
                                         <?php
-                                        if( $sayfa > 1 )
+                                        if($sayfa > 1)
                                         {
                                             echo '<li class="page-item"><a class="page-link" href="blog">Zuerst</a></li>';
                                         }
 
-                                        for( $i = $sayfa - 3; $i < $sayfa + 4; $i++ )
+                                        for($i = $sayfa - 3; $i < $sayfa + 4; $i++)
                                         {
-                                            if( $i > 0 && $i <= $ssayisi )
+                                            if($i > 0 && $i <= $ssayisi)
                                             {
                                                 echo '<li class=" page-item '.($i == $sayfa ? 'active' : '').'"><a class="page-link" href="blog/'.$i.'">'.$i.'</a></li>';
                                             }
                                         }
 
-                                        if( $sayfa != $ssayisi )
+                                        if($sayfa != $ssayisi)
                                         {
                                             echo '<li class="page-item"><a class="page-link" href="blog/'.$ssayisi.'">Letzte Seite</a></li>';
                                         }

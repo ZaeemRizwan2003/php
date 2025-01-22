@@ -1,11 +1,10 @@
-
 <?php //  print_r($_SESSION); ?>
 <header class="header menu_fixed">
     <div id="preloader"><div data-loader="circle-side"></div></div><!-- /Preload -->
     <div id="logo">
         <a href="./">
-            <img src="lib/img/logo.png" width="150" height="" data-retina="true" alt="" class="logo_normal">
-            <img src="lib/img/logo_sticky.png" width="100" height="" data-retina="true" alt="" class="logo_sticky">
+            <img src="lib/img/logo.png" width="150" data-retina="true" alt="" class="logo_normal">
+            <img src="lib/img/logo_sticky.png" width="100" data-retina="true" alt="" class="logo_sticky">
         </a>
 
         <a href="tel:08007118217">
@@ -13,12 +12,12 @@
         </a>
     </div>
     <ul id="top_menu">
-        <?php if (@$_SESSION['uye']) { ?>
+        <?php if (!empty($_SESSION['uye'])) { ?>
             <li><a href="account" class="login" title="Account"> Mein Konto</a></li>
         <?php } else { ?>
             <li><a href="login" id="sign-in" class="login" title="Sign In"> Anmeldung</a></li>
             <!--<li><a href="wishlist.html" class="wishlist_bt_top" title="Your wishlist">Your wishlist</a></li> !-->
-        <?php }  ?>
+        <?php } ?>
     </ul>
     <!-- /top_menu -->
     <a href="#menu" class="btn_mobile">
@@ -34,32 +33,36 @@
             <li><span><a href="javascript:void(0)"> Tours </a></span>
                 <ul>
                     <?php 
-                        $turKategoriler = $db->get_results("SELECT * FROM the_tour_category");
-                        foreach ($turKategoriler as $turKategori) {
+ $stmt = $con->prepare("SELECT * FROM the_tour_category");
+ $stmt->execute();
+ $turKategoriler = $stmt->fetchAll(PDO::FETCH_OBJ);                        if ($turKategoriler) {
+                            foreach ($turKategoriler as $turKategori) {
                     ?>
-                    <li><a href="tours/<?=$turKategori->slug?>/<?=$turKategori->category_id?>"><?=$turKategori->name?></a></li>
-                    <?php } ?>
+                    <li><a href="tours/<?= htmlspecialchars($turKategori->slug) ?>/<?= htmlspecialchars($turKategori->category_id) ?>"><?= htmlspecialchars($turKategori->name) ?></a></li>
+                    <?php } } ?>
                 </ul>
             </li>
             <li><span><a href="hotels">Hotels</a></span>
                 <ul>
                     <?php
-                    $otelKategoriler = $db->get_results("SELECT * FROM the_hotel_category");
-                    foreach ($otelKategoriler as $otelKategori) {
-                        ?>
-                        <li><a href="hotels/<?=$otelKategori->slug?>/<?=$otelKategori->category_id?>"><?=$otelKategori->name?></a></li>
-                    <?php } ?>
+ $stmt = $con->prepare("SELECT * FROM the_hotel_category");
+ $stmt->execute();
+ $otelKategoriler = $stmt->fetchAll(PDO::FETCH_OBJ);                    if ($otelKategoriler) {
+                        foreach ($otelKategoriler as $otelKategori) {
+                    ?>
+                        <li><a href="hotels/<?= htmlspecialchars($otelKategori->slug) ?>/<?= htmlspecialchars($otelKategori->category_id) ?>"><?= htmlspecialchars($otelKategori->name) ?></a></li>
+                    <?php } } ?>
                 </ul>
             </li>
 
             <li><span><a href="blog"> Blog</a></span></li>
             <li><span><a href="faq">FAQ</a></span></li>
             <li><span><a href="contact"> Kontakt </a></span></li>
-            <?php if (@$_SESSION['uye']) { ?>
-            <?php
-                $userEmail = $_SESSION['uye']['hzu_eposta'];
-                $loginUserDetail = $db->get_row("SELECT * FROM users WHERE email = '$userEmail'");
-            ?>
+            <?php if (!empty($_SESSION['uye'])) { 
+                $userEmail = $_SESSION['uye']['hzu_eposta'] ?? '';
+                $stmt = $con->prepare("SELECT * FROM users WHERE email = :email");
+                $stmt->execute([':email' => $userEmail]);
+                $loginUserDetail = $stmt->fetch();            ?>
             <li><span><a href="javascript:void(0)">Mein Konto</a></span>
                 <ul>
                     <li><a href="mein-konto"><i class="fa fa-user-o"></i> Mein Konto</a></li>
@@ -70,7 +73,7 @@
             </li>
             <?php } else { ?>
                 <li><span><a href="login"> Einloggen</a></span></li>
-            <?php }  ?>
+            <?php } ?>
         </ul>
     </nav>
 </header>

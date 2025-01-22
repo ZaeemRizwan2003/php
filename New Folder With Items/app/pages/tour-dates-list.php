@@ -2,19 +2,19 @@
 <?php 
     $tour_id = g('tour_id');
     if($tour_id){
-        $tourDetail = $db->get_row("SELECT * FROM the_tour WHERE tour_id = '$tour_id' ");
+        $tourDetail = $con->query("SELECT * FROM the_tour WHERE tour_id = '$tour_id'")->fetch_object();
     }
 ?>
 <div class="my-3 my-md-5">
     <div class="container">
-    <div class="page-header">
+        <div class="page-header">
             <h1 class="page-title">
                 <h1 class="page-title"> Tur Tarihleri </h1>
             </h1>
             <div class="page-options d-flex ">
                 <div class="page-subtitle ">
                     <strong><?=$tourDetail->name?> </strong> isimli tura ait tarihleri
-                    <a href="tour-list"  class="btn btn-sm btn-orange mr-4"> <i class="fa fa-long-arrow-left"></i> Zurück zu den Touren   </a>
+                    <a href="tour-list" class="btn btn-sm btn-orange mr-4"> <i class="fa fa-long-arrow-left"></i> Zurück zu den Touren   </a>
                 </div>
             </div>
         </div>
@@ -48,11 +48,11 @@
 
                         <?php
                             if($tour_id){
-                                $list = $db->get_results("SELECT * FROM the_tour_date WHERE tour_id = '$tour_id' ORDER BY tour_id,date_id DESC");
+                                $list = $con->query("SELECT * FROM the_tour_date WHERE tour_id = '$tour_id' ORDER BY tour_id,date_id DESC");
                             }else{
-                                $list = $db->get_results("SELECT * FROM the_tour_date ORDER BY tour_id,date_id DESC");
+                                $list = $con->query("SELECT * FROM the_tour_date ORDER BY tour_id,date_id DESC");
                             }
-                            foreach ($list as $view){
+                            while ($view = $list->fetch_object()){
                         ?>
 
                             <tr>
@@ -60,7 +60,7 @@
                                 <?php  if(!$tour_id){ ?>
                                 <th>
                                     <?php
-                                    $tourDetail = $db->get_row("SELECT * FROM the_tour WHERE tour_id = '$view->tour_id' ");
+                                    $tourDetail = $con->query("SELECT * FROM the_tour WHERE tour_id = '$view->tour_id'")->fetch_object();
                                     echo $tourDetail->name;
                                     ?><strong><?=$view->name?></strong> <br>
                                 </th>

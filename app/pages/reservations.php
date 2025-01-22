@@ -23,33 +23,38 @@
                         </thead>
                         <tbody>
 
-                        <?php
-                        $rows = $db->get_results("SELECT * FROM reservations ORDER BY id DESC ");
-                        foreach ($rows as $row){
-                            $userDetail = $db->get_row("SELECT * FROM users WHERE id = '$row->user_id'");
-                            if($row->tour_id){
-                                $tourDetail = $db->get_row("SELECT * FROM the_tour WHERE tour_id = '$row->tour_id'");
-                            }
-                        ?>
-                            <tr>
-                                <th> <span class="tag tag-gray-dark"><?=$row->rezervation_number?></span></th>
-                                <th>
-                                    <div><?=$tourDetail->name?></div>
-
-                                    <span class="tag tag-gray-dark"><?=$row->rezervation_type?></span>
-                                </th>
-                                <th> <strong><?=$userDetail ->firstname?> <?=$userDetail ->lastname?></strong></th>
-                                <th> <?=$row->total_price?> € </th>
-                                <th class="text-center">
-                                    <div class="tag tag-gray"><?=timeTR($row->created_at)?></div>
-                                </th>
-                                <th class="text-center">
-
-                                    <a href="javascript:void(0)" onclick="$.kobyDelete('<?=$row->id?>','?do=otel-rezervasyon&q=delete','otel-reservations')" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Löschen"><i class="fe fe-trash"></i> </a>
-                                </th>
-                            </tr>
-                        <?php } ?>
-
+                            <?php
+                            $result = $con->query("SELECT * FROM reservations ORDER BY id DESC");
+                            while ($row = $result->fetch_object()) {
+                                $userDetail = $con->query("SELECT * FROM users WHERE id = '$row->user_id'")->fetch_object();
+                                $tourDetail = null;
+                                if ($row->tour_id) {
+                                    $tourDetail = $con->query("SELECT * FROM the_tour WHERE tour_id = '$row->tour_id'")->fetch_object();
+                                }
+                                ?>
+                                <tr>
+                                    <th> <span
+                                            class="tag tag-gray-dark"><?= htmlspecialchars($row->rezervation_number) ?></span>
+                                    </th>
+                                    <th>
+                                        <div><?= htmlspecialchars($tourDetail ? $tourDetail->name : 'N/A') ?></div>
+                                        <span class="tag tag-gray-dark"><?= htmlspecialchars($row->rezervation_type) ?></span>
+                                    </th>
+                                    <th> <strong><?= htmlspecialchars($userDetail->firstname) ?>
+                                            <?= htmlspecialchars($userDetail->lastname) ?></strong></th>
+                                    <th> <?= htmlspecialchars($row->total_price) ?> € </th>
+                                    <th class="text-center">
+                                        <div class="tag tag-gray"><?= timeTR($row->created_at) ?></div>
+                                    </th>
+                                    <th class="text-center">
+                                        <a href="javascript:void(0)"
+                                            onclick="$.kobyDelete('<?= htmlspecialchars($row->id) ?>','?do=otel-rezervasyon&q=delete','otel-reservations')"
+                                            class="btn btn-danger btn-sm" data-toggle="tooltip" title="Löschen">
+                                            <i class="fe fe-trash"></i>
+                                        </a>
+                                    </th>
+                                </tr>
+                            <?php } ?>
 
                         </tbody>
                     </table>

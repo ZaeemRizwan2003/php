@@ -1,7 +1,7 @@
 <?php require_once 'req/start.php'; ?>
 <?php require_once 'req/head_start.php'; ?>
 
-<title>Registrieren - <?=$general['site_title']->value;?></title>
+<title>Registrieren - <?= htmlspecialchars($general['site_title']->value) ?></title>
 <?php require_once 'req/head.php'; ?>
 <?php require_once 'req/script.php'; ?>
 
@@ -45,10 +45,9 @@
                 <div class="text-center add_top_10">Hast du schon ein Konto? <strong><a href="login">Einloggen</a></strong></div>
             </form>
             <div class="text-center"><a class="btn btn-primary" href="/"> <i class="fa fa-home"></i> Home</a></div>
-            <div class="copy">© <?=date('Y')?> Sungate24</div>
+            <div class="copy">© <?= date('Y') ?> Sungate24</div>
         </aside>
     </div>
     <!-- /login -->
-
 
 <?php require_once 'req/body_end.php'; ?>

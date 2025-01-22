@@ -30,7 +30,6 @@
                         <i class="pe-7s-mail-open-file"></i>
                         <h4>Email address</h4>
                         <span> info[@]sungate24.com </span>
-
                     </li>
                     <li>
                         <i class="pe-7s-phone"></i>
@@ -114,6 +113,5 @@
     <script src="http://maps.googleapis.com/maps/api/js"></script>
     <script src="lib/js/mapmarker.jquery.js"></script>
     <script src="lib/js/mapmarker_func.jquery.js"></script>
-
 
 <?php require_once 'req/body_end.php'; ?>

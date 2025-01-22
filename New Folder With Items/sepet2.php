@@ -9,44 +9,58 @@
 <?php require_once 'req/header.php'; ?>
 <?php print_r($_SESSION); ?>
 <?php
-    $rezervasyonNo = $_SESSION["sepet"]["rezervasyonNumarasi"];
-$sepetim__urunler = isset($_SESSION['sepet']['rezervasyon']) ? $_SESSION['sepet']['rezervasyon'] : array();
-foreach ($sepetim__urunler as $sepetim__urun) {
-    $rez_type = $sepetim__urun['rez_type'];
+    $rezervasyonNo = $_SESSION["sepet"]["rezervasyonNumarasi"] ?? '';
+    $sepetim__urunler = $_SESSION['sepet']['rezervasyon'] ?? [];
 
-    if($rez_type == 'tour'){
+    foreach ($sepetim__urunler as $sepetim__urun) {
+        $rez_type = $sepetim__urun['rez_type'] ?? '';
 
-        $tour_id = $sepetim__urun['tour_id'];
-        $tour_dates = $sepetim__urun['tour_dates'];
-        $person_size = $sepetim__urun['person_size'];
-        $child_size = $sepetim__urun['child_size'];
+        if ($rez_type === 'tour') {
+            $tour_id = $sepetim__urun['tour_id'] ?? '';
+            $tour_dates = $sepetim__urun['tour_dates'] ?? '';
+            $person_size = $sepetim__urun['person_size'] ?? 0;
+            $child_size = $sepetim__urun['child_size'] ?? 0;
+// Get the tour data
+$stmt = $con->prepare("SELECT * FROM the_tour WHERE tour_id = :tour_id");
+$stmt->bindParam(':tour_id', $tour_id, PDO::PARAM_INT);
+$stmt->execute();
+$paketbul = $stmt->fetch(); // Fetch the result as an object
 
-
-        $paketbul = $db->get_row("SELECT * FROM the_tour WHERE tour_id = '$tour_id'");
-        $tarihbul = $db->get_row("SELECT * FROM the_tour_date WHERE tour_id = '$tour_id' AND date_id = $tour_dates");
-
-        $yetiskinFiyat = $tarihbul->person_price * $person_size;
-        $CocukFiyat = $tarihbul->child_price * $child_size;
-        $fiyat = $yetiskinFiyat + $CocukFiyat;
-    }else{
-        $hotel_id = $sepetim__urun['hotel_id'];
-        $room_id = $sepetim__urun['room_id'];
-        $dates = $sepetim__urun['dates'];
-        $person_size = $sepetim__urun['person_size'];
-        $child_size = $sepetim__urun['child_size'];
+// Get the tour date data
+$stmt2 = $con->prepare("SELECT * FROM the_tour_date WHERE tour_id = :tour_id AND date_id = :date_id");
+$stmt2->bindParam(':tour_id', $tour_id, PDO::PARAM_INT);
+$stmt2->bindParam(':date_id', $tour_dates, PDO::PARAM_INT);
+$stmt2->execute();
+$tarihbul = $stmt2->fetch(); // Fetch the result as an object
 
 
-        $paketbul = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$hotel_id'");
-        $odaBul = $db->get_row("SELECT * FROM the_hotel_room WHERE room_id = '$room_id'");
+            $yetiskinFiyat = $tarihbul->person_price * $person_size;
+            $CocukFiyat = $tarihbul->child_price * $child_size;
+            $fiyat = $yetiskinFiyat + $CocukFiyat;
+        } else {
+            $hotel_id = $sepetim__urun['hotel_id'] ?? '';
+            $room_id = $sepetim__urun['room_id'] ?? '';
+            $dates = $sepetim__urun['dates'] ?? '';
+            $person_size = $sepetim__urun['person_size'] ?? 0;
+            $child_size = $sepetim__urun['child_size'] ?? 0;
 
-        $yetiskinFiyat = $odaBul->person_price * $person_size;
-        $CocukFiyat = $odaBul->child_price * $child_size;
-        $fiyat = $yetiskinFiyat + $CocukFiyat;
+            $stmt3 = $con->prepare("SELECT * FROM the_hotel WHERE hotel_id = :hotel_id");
+            $stmt3->bindParam(':hotel_id', $hotel_id, PDO::PARAM_INT);
+            $stmt3->execute();
+            $paketbul = $stmt3->fetch();
+    
+            // Get the room data using PDO
+            $stmt4 = $con->prepare("SELECT * FROM the_hotel_room WHERE room_id = :room_id");
+            $stmt4->bindParam(':room_id', $room_id, PDO::PARAM_INT);
+            $stmt4->execute();
+            $odaBul = $stmt4->fetch();
+
+            $yetiskinFiyat = $odaBul->person_price * $person_size;
+            $CocukFiyat = $odaBul->child_price * $child_size;
+            $fiyat = $yetiskinFiyat + $CocukFiyat;
+        }
     }
-
-}
 ?>
-
     <div class="hero_in cart_section">
         <div class="wrapper">
             <div class="container">

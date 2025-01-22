@@ -1,3 +1,30 @@
+<?php
+    header('Content-Type: text/html; charset=utf8');
+    date_default_timezone_set('Europe/Istanbul');
+    error_reporting(0);
+
+    // MySQLi connection details
+    $host = 'localhost';
+    $user = 'sungate_vbu';
+    $pass = 'Cqy1#c48';
+    $dbname = 'sungate_vb';
+
+    // Create connection
+    $con = new mysqli($host, $user, $pass, $dbname);
+
+    // Check connection
+    if ($con->connect_error) {
+        die("Connection failed: " . $con->connect_error);
+    }
+
+    // Set the character set and collation for the connection
+    $con->set_charset('utf8');
+    $con->query("SET COLLATION_CONNECTION = 'utf8_general_ci'");
+
+    define('DILADI', 'utf8');
+    define('DILKARSILASTIRMASI', 'utf8_general_ci');
+?>
+
 <?php require_once 'req/start.php'; ?>
 
     <meta name="author" content="Ansonika">
@@ -126,11 +153,10 @@
                     <div class="row">
 
                         <?php
-                            $oteller = $db->get_results("SELECT * FROM the_hotel");
-                                foreach ($oteller as $otel){
-                                $min_cover = $otel->picture;
-
-                                //$enkucukFiyat = $db->get_row("SELECT * FROM the_tour_date WHERE tour_id = '$tur->tour_id' ORDER BY person_price ASC LIMIT 1")
+                            $oteller = $con->query("SELECT * FROM the_hotel");
+                            if ($oteller->num_rows > 0) {
+                                while ($otel = $oteller->fetch_object()) {
+                                    $min_cover = $otel->picture;
                         ?>
 
                         <div class="col-md-4 isotope-item popular">
@@ -153,7 +179,10 @@
                             </div>
                         </div>
 
-                        <?php } ?>
+                        <?php
+                                }
+                            }
+                        ?>
 
                     </div><!-- /row -->
                 </div>

@@ -27,27 +27,30 @@
                         <tbody>
 
                         <?php
-                        $rows = $db->get_results("SELECT * FROM users ORDER BY id DESC ");
-                        foreach ($rows as $row){
+                        // Prepared statement for fetching user data
+                        $stmt = $con->prepare("SELECT * FROM users ORDER BY id DESC");
+                        $stmt->execute();
+                        $rows = $stmt->get_result(); // Get result set
+
+                        while ($row = $rows->fetch_object()) {
                             ?>
                             <tr>
-                                <th> <span class="tag tag-gray-dark"><?=$row->id?></span></th>
-                                <th> <strong><?=$row->firstname?> <?=$row->lastname?></strong> </th>
-                                <th> <?=$row->telephone?> </th>
-                                <th> <?=$row->email?> </th>
+                                <th> <span class="tag tag-gray-dark"><?= htmlspecialchars($row->id) ?></span></th>
+                                <th> <strong><?= htmlspecialchars($row->firstname) ?> <?= htmlspecialchars($row->lastname) ?></strong> </th>
+                                <th> <?= htmlspecialchars($row->telephone) ?> </th>
+                                <th> <?= htmlspecialchars($row->email) ?> </th>
                                 <th>
-                                    <?php if($row->lastlogin_at){ ?>
-                                        <div class="tag tag-teal" data-toggle="tooltip" title="Son Giriş: Yaklaşık <?=timeConvert($row->lastlogin_at)?>"><?=timeTR($row->created_at)?></div>
-                                    <?php }else{ ?>
-                                        <div class="tag tag-gray" data-toggle="tooltip" title="Henüz Anmeldenmamış."><?=timeTR($row->created_at)?></div>
+                                    <?php if ($row->lastlogin_at) { ?>
+                                        <div class="tag tag-teal" data-toggle="tooltip" title="Son Giriş: Yaklaşık <?= timeConvert($row->lastlogin_at) ?>"><?= timeTR($row->created_at) ?></div>
+                                    <?php } else { ?>
+                                        <div class="tag tag-gray" data-toggle="tooltip" title="Henüz Anmeldenmamış."><?= timeTR($row->created_at) ?></div>
                                     <?php } ?>
                                 </th>
                                 <th class="text-center">
-                                    <a href="javascript:void(0)" onclick="kobySingle('<?=$row->id?>','?do=user&q=delete','user')" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Löschen"><i class="fe fe-trash"></i> </a>
+                                    <a href="javascript:void(0)" onclick="kobySingle('<?= htmlspecialchars($row->id) ?>','?do=user&q=delete','user')" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Löschen"><i class="fe fe-trash"></i> </a>
                                 </th>
                             </tr>
                         <?php } ?>
-
 
                         </tbody>
                     </table>

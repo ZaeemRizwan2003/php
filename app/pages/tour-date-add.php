@@ -1,7 +1,7 @@
 <?php echo !defined("ADMIN") ? die("Hacking?") : null; ?>
 <?php
 $tour_id = g('tour_id');
-$tourDetail = $db->get_row("SELECT * FROM the_tour WHERE tour_id = '$tour_id'");
+$tourDetail = $con->query("SELECT * FROM the_tour WHERE tour_id = '$tour_id'")->fetch_object();
 ?>
 <div class="my-3 my-md-5">
     <div class="container">
@@ -11,16 +11,17 @@ $tourDetail = $db->get_row("SELECT * FROM the_tour WHERE tour_id = '$tour_id'");
             </h1>
             <div class="page-options d-flex ">
                 <div class="page-subtitle ">
-                    <?php if($tour_id){ ?>
-                        <a href="tour-dates-list?tour_id=<?=$tour_id?>"  class="btn btn-sm btn-orange mr-4"> <i class="fa fa-long-arrow-left"></i> Zurück zu den Touren   </a><strong><?=$tourDetail->name?> </strong> isimli tura Datum ekliyorsunuz..
-                    <?php }else{ ?>
-                        <a href="tour-dates-list"  class="btn btn-sm btn-orange mr-4"> <i class="fa fa-long-arrow-left"></i> Zurück zu den Touren   </a>
+                    <?php if ($tour_id) { ?>
+                        <a href="tour-dates-list?tour_id=<?= $tour_id ?>" class="btn btn-sm btn-orange mr-4"> <i
+                                class="fa fa-long-arrow-left"></i> Zurück zu den Touren </a><strong><?= $tourDetail->name ?>
+                        </strong> isimli tura Datum ekliyorsunuz..
+                    <?php } else { ?>
+                        <a href="tour-dates-list" class="btn btn-sm btn-orange mr-4"> <i class="fa fa-long-arrow-left"></i>
+                            Zurück zu den Touren </a>
                     <?php } ?>
                 </div>
             </div>
         </div>
-
-
 
         <div class="card">
             <form id="koby_form" method="POST" onsubmit="return false" action="" enctype="multipart/form-data">
@@ -28,27 +29,27 @@ $tourDetail = $db->get_row("SELECT * FROM the_tour WHERE tour_id = '$tour_id'");
                     <div class="row">
                         <div class="col-md-8 col-lg-8">
 
-
                             <div class="form-group">
                                 <label class="form-label">Zugehörige Tour hinzufügen </label>
 
-                                <?php if($tour_id){ ?>
-                                    <input type="text" class="form-control" disabled value="<?=$tourDetail->name?>">
-                                    <input type="hidden" name="tour_id" value="<?=$tour_id?>">
-                                <?php }else{ ?>
+                                <?php if ($tour_id) { ?>
+                                    <input type="text" class="form-control" disabled value="<?= $tourDetail->name ?>">
+                                    <input type="hidden" name="tour_id" value="<?= $tour_id ?>">
+                                <?php } else { ?>
                                     <select name="tour_id" id="tour_id" class="form-control custom-select">
                                         <option value="0"> Tur Seçiniz</option>
                                         <?php
-                                        $tourLists = $db->get_results("SELECT * FROM the_tour ORDER BY tour_id DESC LIMIT 20");
-                                        foreach ($tourLists as $tourList){
+                                        $tourLists = $con->query("SELECT * FROM the_tour ORDER BY tour_id DESC LIMIT 20");
+                                        while ($tourList = $tourLists->fetch_object()) {
                                             ?>
-                                            <option value="<?=$tourList->tour_id?>" <?php if($tour_id == $tourList->tour_id){echo 'selected';} ?> > <?=$tourList->name?></option>
+                                            <option value="<?= $tourList->tour_id ?>" <?php if ($tour_id == $tourList->tour_id) {
+                                                echo 'selected';
+                                            } ?>> <?= $tourList->name ?></option>
                                         <?php } ?>
                                     </select>
                                 <?php } ?>
 
                             </div>
-
 
                             <div class="form-group">
                                 <label class="form-label"> Info zur Tour </label>
@@ -59,13 +60,17 @@ $tourDetail = $db->get_row("SELECT * FROM the_tour WHERE tour_id = '$tour_id'");
                                 <div class="col-lg-6 col-md-6 col-sm-12">
                                     <div class="form-group">
                                         <label class="form-label"> Preis Erwachsene</label>
-                                        <input type="number" class="form-control" name="person_price" placeholder="Örnek: 10.00" data-mask="000.000.000.000.000,00" data-mask-reverse="true">
+                                        <input type="number" class="form-control" name="person_price"
+                                            placeholder="Örnek: 10.00" data-mask="000.000.000.000.000,00"
+                                            data-mask-reverse="true">
                                     </div>
                                 </div>
                                 <div class="col-lg-6 col-md-6 col-sm-12">
                                     <div class="form-group">
                                         <label class="form-label"> Preis Kind</label>
-                                        <input type="number" class="form-control" name="child_price" placeholder="Örnek: 10.00" data-mask="000.000.000.000.000,00" data-mask-reverse="true">
+                                        <input type="number" class="form-control" name="child_price"
+                                            placeholder="Örnek: 10.00" data-mask="000.000.000.000.000,00"
+                                            data-mask-reverse="true">
                                     </div>
                                 </div>
                             </div>
@@ -74,23 +79,26 @@ $tourDetail = $db->get_row("SELECT * FROM the_tour WHERE tour_id = '$tour_id'");
                                 <div class="col-lg-4 col-md-4 col-sm-12">
                                     <div class="form-group">
                                         <label class="form-label"> Maximale Teilnahme </label>
-                                        <input type="number" class="form-control" name="tour_limit" placeholder="Örnek: 120">
+                                        <input type="number" class="form-control" name="tour_limit"
+                                            placeholder="Örnek: 120">
                                     </div>
                                 </div>
                                 <div class="col-lg-4 col-md-4 col-sm-12">
                                     <div class="form-group">
                                         <label class="form-label"> Preis </label>
-                                        <input type="number" class="form-control" name="price_tour" placeholder="Örnek: 2" data-mask="000.000.000.000.000,00" data-mask-reverse="true">
+                                        <input type="number" class="form-control" name="price_tour"
+                                            placeholder="Örnek: 2" data-mask="000.000.000.000.000,00"
+                                            data-mask-reverse="true">
                                     </div>
                                 </div>
                                 <div class="col-lg-4 col-md-4 col-sm-12">
                                     <div class="form-group">
                                         <label class="form-label"> Rabatt </label>
-                                        <input type="number" class="form-control" name="price_discount" placeholder="Örnek: 2">
+                                        <input type="number" class="form-control" name="price_discount"
+                                            placeholder="Örnek: 2">
                                     </div>
                                 </div>
                             </div>
-
 
                         </div>
                         <div class="col-md-4 col-lg-4">
@@ -98,20 +106,22 @@ $tourDetail = $db->get_row("SELECT * FROM the_tour WHERE tour_id = '$tour_id'");
 
                                 <div class="form-group">
                                     <label class="form-label"> Beginn </label>
-                                    <input type="text" class="form-control" name="tour_start_date" data-toggle="datepicker">
+                                    <input type="text" class="form-control" name="tour_start_date"
+                                        data-toggle="datepicker">
                                 </div>
 
                                 <div class="form-group">
                                     <label class="form-label"> Ende</label>
-                                    <input type="text" class="form-control" name="tour_finish_date" data-toggle="datepicker" >
+                                    <input type="text" class="form-control" name="tour_finish_date"
+                                        data-toggle="datepicker">
                                 </div>
 
-
                                 <div class="form-group">
-                                    <label class="form-label">  Anzeigen?</label>
+                                    <label class="form-label"> Anzeigen?</label>
                                     <div class="selectgroup w-100">
                                         <label class="selectgroup-item">
-                                            <input type="radio" name="status" value="1" class="selectgroup-input" checked="">
+                                            <input type="radio" name="status" value="1" class="selectgroup-input"
+                                                checked="">
                                             <span class="selectgroup-button">Ja, anzeigen.</span>
                                         </label>
                                         <label class="selectgroup-item">
@@ -120,7 +130,9 @@ $tourDetail = $db->get_row("SELECT * FROM the_tour WHERE tour_id = '$tour_id'");
                                         </label>
                                     </div>
                                 </div>
-                                <button type="submit"   onclick="kobySubmit('?do=tour&q=date-add','tour-dates-list')" class="btn btn-block btn-success btn-lg"> Speichern und Schließen <i class="fe fe-save"></i>  </button>
+                                <button type="submit" onclick="kobySubmit('?do=tour&q=date-add','tour-dates-list')"
+                                    class="btn btn-block btn-success btn-lg"> Speichern und Schließen <i
+                                        class="fe fe-save"></i> </button>
                             </fieldset>
                         </div>
                     </div>
@@ -129,4 +141,3 @@ $tourDetail = $db->get_row("SELECT * FROM the_tour WHERE tour_id = '$tour_id'");
         </div>
     </div>
 </div>
-

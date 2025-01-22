@@ -4,14 +4,14 @@
     <title>Mein Konto - <?=$general['site_title']->value;?></title>
 
     <?php
-        if(!$_SESSION['uye']) {
+        if(!isset($_SESSION['uye'])) {
             go('kayit-giris');
         }
         $userID = $_SESSION['uye']['hzu_userid'];
     ?>
     <?php
-        $do = @g('do');
-        $q = @g('q');
+        $do = filter_input(INPUT_GET, 'do', FILTER_SANITIZE_STRING);
+        $q = filter_input(INPUT_GET, 'q', FILTER_SANITIZE_STRING);
         if($do == 'cikis_yap'){
             unset($_SESSION["uye"]);
             unset($_SESSION["sepet"]);
@@ -35,33 +35,23 @@
         </section>
         <!--/hero_in-->
 
-
         <div class="bg_color_1">
             <div class="container margin_80_55">
                 <div class="row">
 
                     <div class="col-md-3">
                         <div class="profile-sidebar">
-                            <!-- SIDEBAR USERPIC
-                            <div class="profile-userpic">
-                                <img src="assets/img/user.jpg" class="img-responsive img-circle img-thumbnail" alt="">
-                            </div>
-                            END SIDEBAR USERPIC -->
-                            <!-- SIDEBAR USER TITLE -->
                             <div class="profile-usertitle">
                                 <div class="profile-usertitle-name">
                                     <?=$_SESSION['uye']['hzu_name']?>
                                 </div>
                             </div>
-                            <!-- END SIDEBAR USER TITLE -->
-                            <!-- SIDEBAR BUTTONS -->
+
                             <div class="profile-userbuttons">
                                 <button type="button" onclick="window.location.href='cikis-yap'" class="btn btn-danger btn-xs"> <i class="fa fa-power-off"></i> Abmelden</button>
                             </div>
-                            <!-- END SIDEBAR BUTTONS -->
-                            <!-- SIDEBAR MENU -->
-                            <div class="profile-usermenu">
 
+                            <div class="profile-usermenu">
                                 <ul class="nav">
                                     <li class="<?php if($do == 'hesap_bilgilerim' OR $do == ''){echo 'active';}?>"><a href="mein-konto"><i class="fa fa-user-o"></i> Meine Profilinformationen</a></li>
                                     <li class="<?php if($do == 'fatura_bilgilerim'){echo 'active';}?>"><a href="abrechnungs-informationen"><i class="fa fa-briefcase"></i> Rechnungsinformationen</a></li>
@@ -69,13 +59,11 @@
                                     <li><a href="cikis-yap"><i class="fa fa-power-off"></i>Abmelden</a></li>
                                 </ul>
                             </div>
-                            <!-- END MENU -->
                         </div>
                     </div>
 
                     <div class="col-md-9">
                         <div class="profile-content">
-
 
                             <!--  ########### Siparişlerim ########### !-->
                             <?php if($do == 'meinebuchung'){ ?>
@@ -83,8 +71,12 @@
                                 <div class="profile-content_title">Meine Buchung</div>
 
                                 <?php
-                                $siparisler = $db->get_results("SELECT * FROM reservations WHERE user_id = '$userID' ORDER BY status ASC ");
-                                if ($siparisler) {
+                                $stmt = $con->prepare("SELECT * FROM reservations WHERE user_id = ? ORDER BY status ASC");
+                                $stmt->bind_param("i", $userID);
+                                $stmt->execute();
+                                $result = $stmt->get_result();
+
+                                if ($result->num_rows > 0) {
                                     ?>
                                     <div class="table-responsive">
                                         <table class="table table-striped">
@@ -100,8 +92,7 @@
                                             <tbody>
 
                                             <?php
-                                            foreach ($siparisler as $siparis) {
-
+                                            while ($siparis = $result->fetch_object()) {
                                                 $siparisindirim = $siparis->indirim_durum;
                                                 if($siparisindirim == 1){
                                                     $toplamTutarOdeme = number_format(floatval($siparis->total_price_indirim), 2, ',', '.').' ';
@@ -119,16 +110,18 @@
                                                     <td><strong>#<?=$siparis->rezervation_number?></strong></td>
                                                     <td>
                                                         <?php
-                                                            $siparisDetayCek = $db->get_row("SELECT * FROM reservations WHERE user_id = '$userID' AND rezervation_number = '$siparis->rezervation_number'");
-                                                            $otelDetail = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$siparisDetayCek->hotel_id'");
+                                                            $stmt2 = $con->prepare("SELECT * FROM the_hotel WHERE hotel_id = ?");
+                                                            $stmt2->bind_param("i", $siparis->hotel_id);
+                                                            $stmt2->execute();
+                                                            $hotelResult = $stmt2->get_result();
+                                                            $otelDetail = $hotelResult->fetch_object();
                                                             echo $otelDetail->name;
                                                         ?>
                                                     </td>
-                                                    <td><?=$siparisDetayCek->hotel_dates?></td>
+                                                    <td><?=$siparis->hotel_dates?></td>
                                                     <td><h5 style="margin:0; padding:0;"><strong><?=$cekilecek?> </strong></h5></td>
                                                     <td>
                                                         <?php if($siparis->durum == 0){ ?>
-                                                            <!--<a href="odeme/<?=$siparis->siparisno?>" class="btn btn-success btn-block btn-xs"><i class="fa fa-credit-card"></i> Zahlung ausführen</a> !-->
                                                         <?php } ?>
                                                         <div style="margin-bottom: 5px;"><?php if($siparis->durum != 0){ echo siparisDurum($siparis->durum).' '; } ?></div>
                                                         <button type="button" name="button" id="<?=$siparis->rezervation_number?>" class="btn btn-primary btn-sm  view_data"><i class="fa fa-search-plus"></i> Details</button>
@@ -138,16 +131,12 @@
                                             </tbody>
                                         </table>
                                     </div>
-
-
-
-                                <?php }else{ ?>
+                                <?php } else { ?>
                                     <div class="notify unhappy-box">
                                         <h1> Sie haben noch keine Reservierungen.</h1>
                                         <span class="alerticon"> <i class="fa fa-frown-o"></i> </span>
                                     </div>
                                 <?php } ?>
-
                             <?php } ?>
                              <!--  ########### Siparişlerim ########### !-->
 
@@ -155,7 +144,12 @@
                             <!--  ########### Fatura Bilgilerim ########### !-->
                             <?php if($do == 'fatura_bilgilerim'){ ?>
 
-                                <?php $user = $db->get_row("SELECT * FROM users WHERE id = '$userID'"); ?>
+                                <?php
+                                    $stmt = $con->prepare("SELECT * FROM users WHERE id = ?");
+                                    $stmt->bind_param("i", $userID);
+                                    $stmt->execute();
+                                    $user = $stmt->get_result()->fetch_object();
+                                ?>
                                 <script type="text/javascript">
                                     $(document).ready(function(){
                                         illeriGetir();
@@ -221,7 +215,12 @@
 
                             <!--  ########### Hesap Bilgilerim ########### !-->
                             <?php if($do == 'hesap_bilgilerim' OR $do == ''){ ?>
-                                <?php $user = $db->get_row("SELECT * FROM users WHERE id = '$userID'"); ?>
+                                <?php
+                                    $stmt = $con->prepare("SELECT * FROM users WHERE id = ?");
+                                    $stmt->bind_param("i", $userID);
+                                    $stmt->execute();
+                                    $user = $stmt->get_result()->fetch_object();
+                                ?>
                                 <div class="profile-content_title">Meine Kontoinformationen</div>
 
                                 <div class="alert alert-info">
@@ -252,76 +251,25 @@
                                             <div class="form-group">
                                                 <label class="control-label"> Geschlecht: </label>
                                                 <select class="form-control wide add_bottom_15" name="gender">
-                                                    <option value="0">Wählen Sie ihr Geschlecht aus</option>
-                                                    <option value="1" <?php if($user->gender == 1){echo 'selected';} ?>>Frau</option>
-                                                    <option value="2" <?php if($user->gender == 2){echo 'selected';} ?>>Mann</option>
+                                                    <option value="Male" <?php if($user->gender == "Male"){echo 'selected';} ?>>Male</option>
+                                                    <option value="Female" <?php if($user->gender == "Female"){echo 'selected';} ?>>Female</option>
                                                 </select>
                                             </div>
                                         </div>
                                     </div>
 
-
-                                    <div class="row">
-                                        <div class="col-lg-6">
-                                            <div class="form-group">
-                                                <label class="control-label"> Telefon:</label>
-                                                <input class="form-control ceptelefonu" name="phone" id="phone" value="<?=$user->telephone?>" type="text">
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-6">
-                                            <div class="form-group">
-                                                <label class="control-label">Passwort:</label>
-                                                <input class="form-control" name="sifre" id="sifre" type="password">
-                                                <p class="help-block"> Lassen Sie dieses Feld leer, wenn Sie Ihr Passwort nicht ändern möchten.</p>
-                                            </div>
-                                        </div>
-                                    </div>
                                     <div class="form-group">
-                                        <button type="submit"  onclick="profilEdit();"  class="btn btn-success"> <i class="fa fa-refresh"></i>  Aktualisierung</button>
+                                        <button type="submit" onclick="profilEdit();" class="btn btn-success"> <i class="fa fa-refresh"></i> Aktualisierung</button>
                                     </div>
                                 </form>
                             <?php } ?>
                             <!--  ########### Hesap Bilgilerim ########### !-->
-
-
-
-
-                            <!-- Modal -->
-                            <div class="modal fade" id="dataModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="exampleModalLongTitle">Reservierungsdetails</h5>
-                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                <span aria-hidden="true">&times;</span>
-                                            </button>
-                                        </div>
-                                        <div class="modal-body" id="employee_detail">
-
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-danger btn-sm" data-dismiss="modal">Schliessen</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
-        <!-- /bg_color_1 -->
     </main>
-    <!--/main-->
-
 <?php require_once 'req/footer.php'; ?>
-<?php require_once 'req/script.php'; ?>
-
-    <!-- SPECIFIC SCRIPTS -->
-    <script src="https://maps.googleapis.com/maps/api/js"></script>
-    <script src="lib/js/mapmarker.jquery.js"></script>
-    <script src="lib/js/mapmarker_func.jquery.js"></script>
-
-
 <?php require_once 'req/body_end.php'; ?>

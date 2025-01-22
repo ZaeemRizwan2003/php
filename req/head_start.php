@@ -17,20 +17,26 @@
     <meta name="robots" content="index, follow">
 
     <?php 
-        $generalSettings = $db->get_results("SELECT * FROM the_setting WHERE type= 'general'");
-        
-        function namedSettings($settings)
-        {
+// Prepare the SQL query
+$stmt = $con->prepare("SELECT * FROM the_setting WHERE type = :type");
+
+// Execute the query with the parameter for 'type'
+$stmt->execute([':type' => 'general']);
+
+// Fetch all results as an array of objects
+$generalSettings = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+        function namedSettings($settings) {
             $named_settings = [];
-            
-            foreach ($settings as $setting) {
-                $named_settings[$setting->name] = $setting;
+            if ($settings) {
+                foreach ($settings as $setting) {
+                    $named_settings[$setting->name] = $setting;
+                }
             }
-            
             return $named_settings;
         }
 
         $general = namedSettings($generalSettings);
-        $rezervasyonNo = $_SESSION["sepet"]["rezervasyonNumarasi"];
 
+        $rezervasyonNo = $_SESSION["sepet"]["rezervasyonNumarasi"] ?? '';
     ?>

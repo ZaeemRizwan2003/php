@@ -1,14 +1,16 @@
 <?php echo !defined("ADMIN") ? die("Hacking?") : null; ?>
 <?php
 $id = g('id');
-$view = $db->get_row("SELECT * FROM ilce WHERE id = '$id'");
+$stmt = $con->prepare("SELECT * FROM ilce WHERE id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$view = $stmt->get_result()->fetch_object();
+$stmt->close();
 ?>
 <div class="my-3 my-md-5">
     <div class="container">
         <div class="page-header">
-            <h1 class="page-title">
-                <h1 class="page-title">  Region Name </h1>
-            </h1>
+            <h1 class="page-title"> Region Name </h1>
         </div>
 
         <div class="card">
@@ -17,8 +19,9 @@ $view = $db->get_row("SELECT * FROM ilce WHERE id = '$id'");
                     <div class="row">
                         <div class="col-md-8 col-lg-8">
                             <div class="form-group">
-                                <label class="form-label"> Region Name</label>
-                                <input type="text" class="form-control" name="name" value="<?=$view->ilce_adi?>">
+                                <label class="form-label">Region Name</label>
+                                <input type="text" class="form-control" name="name"
+                                    value="<?= htmlspecialchars($view->ilce_adi) ?>">
                             </div>
                         </div>
                         <div class="col-md-4 col-lg-4">
@@ -27,31 +30,39 @@ $view = $db->get_row("SELECT * FROM ilce WHERE id = '$id'");
                                 <div class="form-group">
                                     <label class="form-label">Bağlantılı Olduğu İl</label>
                                     <select name="il_id" id="il_id" class="form-control custom-select">
-                                        <option value="0"> İl Seçiniz</option>
+                                        <option value="0">İl Seçiniz</option>
                                         <?php
-                                        $hotelLists = $db->get_results("SELECT * FROM il ORDER BY il_adi ASC");
-                                        foreach ($hotelLists as $hotelLis){
+                                        $result = $con->query("SELECT * FROM il ORDER BY il_adi ASC");
+                                        while ($hotelLis = $result->fetch_object()) {
                                             ?>
-                                            <option value="<?=$hotelLis->id?>" <?php if($view->il_id == $hotelLis->id){echo 'selected';} ?> > <?=$hotelLis->il_adi?></option>
+                                            <option value="<?= $hotelLis->id ?>" <?= ($view->il_id == $hotelLis->id) ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($hotelLis->il_adi) ?>
+                                            </option>
                                         <?php } ?>
                                     </select>
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="form-label">  Anzeigen?</label>
+                                    <label class="form-label">Anzeigen?</label>
                                     <div class="selectgroup w-100">
                                         <label class="selectgroup-item">
-                                            <input type="radio" name="status" value="1" class="selectgroup-input" <?php if($view->status == '1'){ echo 'checked';} ?>>
+                                            <input type="radio" name="status" value="1" class="selectgroup-input"
+                                                <?= ($view->status == '1') ? 'checked' : '' ?>>
                                             <span class="selectgroup-button">Ja, anzeigen.</span>
                                         </label>
                                         <label class="selectgroup-item">
-                                            <input type="radio" name="status" value="0" class="selectgroup-input" <?php if($view->status == '0'){ echo 'checked';} ?>>
+                                            <input type="radio" name="status" value="0" class="selectgroup-input"
+                                                <?= ($view->status == '0') ? 'checked' : '' ?>>
                                             <span class="selectgroup-button">Nein, nur abspeichern</span>
                                         </label>
                                     </div>
                                 </div>
 
-                                <button type="submit"   onclick="kobySubmit('?do=state&q=edit&id=<?=$view->id?>','state-list')" class="btn btn-block btn-success btn-lg"> Speichern und Schließen <i class="fe fe-save"></i>  </button>
+                                <button type="submit"
+                                    onclick="kobySubmit('?do=state&q=edit&id=<?= $view->id ?>','state-list')"
+                                    class="btn btn-block btn-success btn-lg">
+                                    Speichern und Schließen <i class="fe fe-save"></i>
+                                </button>
                             </fieldset>
                         </div>
                     </div>
@@ -60,4 +71,3 @@ $view = $db->get_row("SELECT * FROM ilce WHERE id = '$id'");
         </div>
     </div>
 </div>
-

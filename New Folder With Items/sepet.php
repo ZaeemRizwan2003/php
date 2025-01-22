@@ -1,12 +1,13 @@
 <?php require_once 'req/start.php'; ?>
 <?php require_once 'req/head_start.php'; ?>
 <?php
-    $rezervasyonNo = $_SESSION["sepet"]["rezervasyonNumarasi"];
+    $rezervasyonNo = $_SESSION["sepet"]["rezervasyonNumarasi"] ?? '';
 	if($_GET){
-		$q = $_GET["q"];
-		if($q == 'sepeti_bosalt'){
+		$q = $_GET["q"] ?? '';
+		if($q === 'sepeti_bosalt'){
 			unset($_SESSION["sepet"]);
-			go('sepetim');
+			header('Location: sepetim');
+			exit;
 		}
 	}
 ?>
@@ -17,58 +18,73 @@
 <?php require_once 'req/body_start.php'; ?>
 <?php require_once 'req/header.php'; ?>
 
-    
-    <?php print_r($_SESSION); ?>
-    <?php 
-        $sepetim__urunler = isset($_SESSION['sepet']['rezervasyon']) ? $_SESSION['sepet']['rezervasyon'] : array();
-            foreach ($sepetim__urunler as $sepetim__urun) {
-                $rez_type = $sepetim__urun['rez_type'];
+<?php 
+    $sepetim__urunler = $_SESSION['sepet']['rezervasyon'] ?? [];
+    foreach ($sepetim__urunler as $sepetim__urun) {
+        $rez_type = $sepetim__urun['rez_type'];
 
-                if($rez_type == 'tour'){
+        if($rez_type === 'tour'){
+            $tour_id = $sepetim__urun['tour_id'];
+            $tour_dates = $sepetim__urun['tour_dates'];
+            $person_size = $sepetim__urun['person_size'];
+            $child_size = $sepetim__urun['child_size'];
 
-                    $tour_id = $sepetim__urun['tour_id'];
-                    $tour_dates = $sepetim__urun['tour_dates'];
-                    $person_size = $sepetim__urun['person_size'];
-                    $child_size = $sepetim__urun['child_size'];
+          // Get the tour data
+$stmt = $con->prepare("SELECT * FROM the_tour WHERE tour_id = :tour_id");
+$stmt->bindParam(':tour_id', $tour_id, PDO::PARAM_INT);
+$stmt->execute();
+$paketbul = $stmt->fetch();
 
-
-                    $paketbul = $db->get_row("SELECT * FROM the_tour WHERE tour_id = '$tour_id'");
-                    $tarihbul = $db->get_row("SELECT * FROM the_tour_date WHERE tour_id = '$tour_id' AND date_id = $tour_dates");
-
-                    $yetiskinFiyat = $tarihbul->person_price * $person_size;
-                    $CocukFiyat = $tarihbul->child_price * $child_size;
-                    $fiyat = $yetiskinFiyat + $CocukFiyat;
-                }else{
-                    $hotel_id = $sepetim__urun['hotel_id'];
-                    $room_id = $sepetim__urun['room_id'];
-                    $dates = $sepetim__urun['dates'];
-                    $person_size = $sepetim__urun['person_size'];
-                    $child_size = $sepetim__urun['child_size'];
+// Get the tour date data
+$stmt2 = $con->prepare("SELECT * FROM the_tour_date WHERE tour_id = :tour_id AND date_id = :date_id");
+$stmt2->bindParam(':tour_id', $tour_id, PDO::PARAM_INT);
+$stmt2->bindParam(':date_id', $tour_dates, PDO::PARAM_INT);
+$stmt2->execute();
+$tarihbul = $stmt2->fetch();
 
 
-                    $paketbul = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$hotel_id'");
-                    $odaBul = $db->get_row("SELECT * FROM the_hotel_room WHERE room_id = '$room_id'");
+            $yetiskinFiyat = $tarihbul->person_price * $person_size;
+            $CocukFiyat = $tarihbul->child_price * $child_size;
+            $fiyat = $yetiskinFiyat + $CocukFiyat;
+        }else{
+            $hotel_id = $sepetim__urun['hotel_id'];
+            $room_id = $sepetim__urun['room_id'];
+            $dates = $sepetim__urun['dates'];
+            $person_size = $sepetim__urun['person_size'];
+            $child_size = $sepetim__urun['child_size'];
 
-                    $yetiskinFiyat = $odaBul->person_price * $person_size;
-                    $CocukFiyat = $odaBul->child_price * $child_size;
-                    $fiyat = $yetiskinFiyat + $CocukFiyat;
-                }
+         // Get the hotel data
+$stmt = $con->prepare("SELECT * FROM the_hotel WHERE hotel_id = :hotel_id");
+$stmt->bindParam(':hotel_id', $hotel_id, PDO::PARAM_INT);
+$stmt->execute();
+$paketbul = $stmt->fetch();
 
-            }
-    ?>
+// Get the room data
+$stmt2 = $con->prepare("SELECT * FROM the_hotel_room WHERE room_id = :room_id");
+$stmt2->bindParam(':room_id', $room_id, PDO::PARAM_INT);
+$stmt2->execute();
+$odaBul = $stmt2->fetch();
 
-    <?php if (empty($_SESSION["sepet"])) { ?>
-        <div class="hero_in cart_section last">
-			<div class="wrapper">
-				<div class="container">
-					<div id="confirm">
-						<h4> Boş </h4>
-						<p> Sepet Boş </p>
-					</div>
-				</div>
-			</div>
-		</div>
-    <?php }else{ ?>
+
+            $yetiskinFiyat = $odaBul->person_price * $person_size;
+            $CocukFiyat = $odaBul->child_price * $child_size;
+            $fiyat = $yetiskinFiyat + $CocukFiyat;
+        }
+    }
+?>
+
+<?php if (empty($_SESSION["sepet"])) { ?>
+    <div class="hero_in cart_section last">
+        <div class="wrapper">
+            <div class="container">
+                <div id="confirm">
+                    <h4> Boş </h4>
+                    <p> Sepet Boş </p>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php }else{ ?>
     <div class="hero_in cart_section">
         <div class="wrapper">
             <div class="container">
@@ -194,37 +210,33 @@
     </div>
     <!-- /bg_color_1 -->
     <?php } ?>
-    
-
+  
 <?php require_once 'req/footer.php'; ?>
 <?php require_once 'req/script.php'; ?>
-    <?php
-    if($hotel_id){
-        $link = 'orezervasyonTwo';
-    }else{
-        $link = 'rezervasyonTwo';
-    }
-    ?>
-    <script type="text/javascript">
-    $(document).ready(function(){
-        $.siparisiTamamla = function(value){
-            $.ajax({
-                url: '<?=$link?>',
-                type:"post",
-                data:{id:value},
-                dataType :"json",
-                success:function(cevap){
-                    if(cevap.hata){
-                        alert(cevap.hata);
-                    }else if(cevap.bos){
-                        alert(cevap.bos);
-                    }else{
-                        window.location.href = "rezervasyon/2/"+value;
-                    }
+
+<?php
+$link = isset($hotel_id) ? 'orezervasyonTwo' : 'rezervasyonTwo';
+?>
+<script type="text/javascript">
+$(document).ready(function(){
+    $.siparisiTamamla = function(value){
+        $.ajax({
+            url: '<?=$link?>',
+            type: "post",
+            data: {id: value},
+            dataType: "json",
+            success: function(cevap){
+                if(cevap.hata){
+                    alert(cevap.hata);
+                } else if(cevap.bos){
+                    alert(cevap.bos);
+                } else {
+                    window.location.href = "rezervasyon/2/" + value;
                 }
-            });
-        }
-    });
-    </script>
+            }
+        });
+    }
+});
+</script>
 
 <?php require_once 'req/body_end.php'; ?>

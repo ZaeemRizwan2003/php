@@ -1,8 +1,10 @@
 <?php echo !defined("ADMIN") ? die("Hacking?") : null; ?>
+
 <?php
 $id = g('id');
-$view = $db->get_row("SELECT * FROM reservations WHERE id = '$id'");
+$view = $con->query("SELECT * FROM reservations WHERE id = '$id'")->fetch_object();
 ?>
+
 <div class="my-3 my-md-5">
     <div class="container">
 
@@ -19,7 +21,7 @@ $view = $db->get_row("SELECT * FROM reservations WHERE id = '$id'");
                         <div class="invoice" id="invoice">
                             <?php
                             $userID = $view->user_id;
-                            $userSearch = $db->get_row("SELECT * FROM users WHERE id = '$userID'");
+                            $userSearch = $con->query("SELECT * FROM users WHERE id = '$userID'")->fetch_object();
                             ?>
                             <div class="row invoice-header">
                                 <div class="col-sm-6 col-xs-12">
@@ -36,7 +38,8 @@ $view = $db->get_row("SELECT * FROM reservations WHERE id = '$id'");
                             <div class="row">
                                 <div class="col-md-12">
                                     <table class="invoice-details">
-                                        <tbody><tr>
+                                        <tbody>
+                                        <tr>
                                             <th style="width:40%">Açıklama</th>
                                             <th style="width:20%"><center>Datum hinzufügen</center></th>
                                             <th style="width:17%" class="hours">Katılımcı</th>
@@ -45,7 +48,7 @@ $view = $db->get_row("SELECT * FROM reservations WHERE id = '$id'");
                                         <?php
                                         $tourID = $view->hotel_id;
                                         $tourDate = $view->hotel_dates;
-                                        $tourSearch = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$tourID'");
+                                        $tourSearch = $con->query("SELECT * FROM the_hotel WHERE hotel_id = '$tourID'")->fetch_object();
                                         ?>
                                         <tr>
                                             <td class="description"><?=$tourSearch->name?></td>
@@ -66,7 +69,8 @@ $view = $db->get_row("SELECT * FROM reservations WHERE id = '$id'");
                                             <td class="summary total">Gesamt</td>
                                             <td class="amount total-value"><?=$view->total_price?> €</td>
                                         </tr>
-                                        </tbody></table>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                             <div class="row">
@@ -80,4 +84,3 @@ $view = $db->get_row("SELECT * FROM reservations WHERE id = '$id'");
 
     </div>
 </div>
-

@@ -3,9 +3,7 @@
 <div class="my-3 my-md-5">
     <div class="container">
         <div class="page-header">
-            <h1 class="page-title">
-                <h1 class="page-title">  Landkreis</h1>
-            </h1>
+            <h1 class="page-title">Landkreis</h1>
         </div>
 
         <div class="card">
@@ -17,30 +15,30 @@
                                 <label class="form-label">Region Name</label>
                                 <input type="text" class="form-control" name="name">
                             </div>
-
                         </div>
+
                         <div class="col-md-4 col-lg-4">
                             <fieldset class="form-fieldset">
-
-
                                 <div class="form-group">
                                     <label class="form-label">Bağlantılı Olduğu İl</label>
                                     <select name="il_id" id="il_id" class="form-control custom-select">
-                                        <option value="0"> İl Seçiniz</option>
+                                        <option value="0">İl Seçiniz</option>
                                         <?php
-                                        $hotelLists = $db->get_results("SELECT * FROM il ORDER BY il_adi ASC");
-                                        foreach ($hotelLists as $hotelLis){
+                                        $stmt = $con->query("SELECT * FROM il ORDER BY il_adi ASC");
+                                        while ($hotelLis = $stmt->fetch_object()) {
                                             ?>
-                                            <option value="<?=$hotelLis->id?>"  > <?=$hotelLis->il_adi?></option>
+                                            <option value="<?= $hotelLis->id ?>"> <?= htmlspecialchars($hotelLis->il_adi) ?>
+                                            </option>
                                         <?php } ?>
                                     </select>
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="form-label">  Anzeigen?</label>
+                                    <label class="form-label">Anzeigen?</label>
                                     <div class="selectgroup w-100">
                                         <label class="selectgroup-item">
-                                            <input type="radio" name="status" value="1" class="selectgroup-input" checked>
+                                            <input type="radio" name="status" value="1" class="selectgroup-input"
+                                                checked>
                                             <span class="selectgroup-button">Ja, anzeigen.</span>
                                         </label>
                                         <label class="selectgroup-item">
@@ -50,7 +48,10 @@
                                     </div>
                                 </div>
 
-                                <button type="submit"   onclick="kobySubmit('?do=state&q=add','state-list')" class="btn btn-block btn-success btn-lg"> Speichern und Schließen <i class="fe fe-save"></i>  </button>
+                                <button type="submit" onclick="kobySubmit('?do=state&q=add','state-list')"
+                                    class="btn btn-block btn-success btn-lg">
+                                    Speichern und Schließen <i class="fe fe-save"></i>
+                                </button>
                             </fieldset>
                         </div>
                     </div>
@@ -59,4 +60,3 @@
         </div>
     </div>
 </div>
-

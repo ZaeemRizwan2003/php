@@ -22,37 +22,41 @@
                                 <label class="form-label">Inhalt </label>
                                 <textarea class="form-control" id="editor" name="content"></textarea>
                             </div>
-
-
-
-
                         </div>
                         <div class="col-md-4 col-lg-4">
                             <fieldset class="form-fieldset">
 
                                 <div class="form-group">
-                                    <label class="form-label">Kategori</label>
-                                    <select name="blog_category_id" id="blog_category_id" class="form-control custom-select">
+                                    <label class="form-label">Kategorie</label>
+                                    <select name="blog_category_id" id="blog_category_id"
+                                        class="form-control custom-select">
                                         <?php
-                                        $kategoriler = $db->get_results("SELECT * FROM the_blog_category ORDER BY name ASC");
-                                        foreach ($kategoriler as $kategori){
+                                        // Use prepared statements to fetch categories securely
+                                        $stmt = $con->prepare("SELECT * FROM the_blog_category ORDER BY name ASC");
+                                        $stmt->execute();
+                                        $result = $stmt->get_result();
+                                        while ($kategori = $result->fetch_object()) {
                                             ?>
-                                            <option value="<?=$kategori->category_id?>"><?=$kategori->name?></option>';
-                                        <?php }  ?>
+                                            <option value="<?= htmlspecialchars($kategori->category_id) ?>">
+                                                <?= htmlspecialchars($kategori->name) ?></option>
+                                        <?php }
+                                        $stmt->close();
+                                        ?>
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <div class="form-label"> Wallpaper Bild </div>
+                                    <div class="form-label">Wallpaper Bild</div>
                                     <div class="custom-file">
                                         <input type="file" class="form-control" name="picture">
                                     </div>
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="form-label">  Anzeigen?</label>
+                                    <label class="form-label">Anzeigen?</label>
                                     <div class="selectgroup w-100">
                                         <label class="selectgroup-item">
-                                            <input type="radio" name="status" value="1" class="selectgroup-input" checked="">
+                                            <input type="radio" name="status" value="1" class="selectgroup-input"
+                                                checked="">
                                             <span class="selectgroup-button">Ja, anzeigen.</span>
                                         </label>
                                         <label class="selectgroup-item">
@@ -62,8 +66,9 @@
                                     </div>
                                 </div>
 
-                                <button type="submit"   onclick="kobySubmit('?do=blog&q=add','blog-list')" class="btn btn-block btn-success btn-lg"> Speichern und Schließen <i class="fe fe-save"></i>  </button>
-
+                                <button type="submit" onclick="kobySubmit('?do=blog&q=add','blog-list')"
+                                    class="btn btn-block btn-success btn-lg">Speichern und Schließen <i
+                                        class="fe fe-save"></i></button>
 
                             </fieldset>
                         </div>
@@ -73,4 +78,3 @@
         </div>
     </div>
 </div>
-

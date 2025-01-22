@@ -1,11 +1,25 @@
 <?php echo !defined("ADMIN") ? die("Hacking?") : null; ?>
+
 <?php
 $room_id = g('id');
-$roomDetail = $db->get_row("SELECT * FROM the_hotel_room WHERE room_id = '$room_id'");
+
+// Use prepared statements to fetch room details
+$stmt = $con->prepare("SELECT * FROM the_hotel_room WHERE room_id = ?");
+$stmt->bind_param("i", $room_id);
+$stmt->execute();
+$roomDetail = $stmt->get_result()->fetch_object();
+$stmt->close();
 
 $hotel_id = $roomDetail->hotel_id;
-$hotelDetail = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$hotel_id'");
+
+// Fetch hotel details securely
+$stmt = $con->prepare("SELECT * FROM the_hotel WHERE hotel_id = ?");
+$stmt->bind_param("i", $hotel_id);
+$stmt->execute();
+$hotelDetail = $stmt->get_result()->fetch_object();
+$stmt->close();
 ?>
+
 <div class="my-3 my-md-5">
     <div class="container">
         <div class="page-header">
@@ -14,15 +28,15 @@ $hotelDetail = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$hotel_id
             </h1>
             <div class="page-options d-flex ">
                 <div class="page-subtitle ">
-                        <strong><?=$roomDetail->name?> </strong> isimli oda özellik ekliyorsunuz..
-                        <a href="hotel-rooms?hotel_id=<?=$hotel_id?>"  class="btn btn-sm btn-orange mr-4"> <i class="fa fa-long-arrow-left"></i> Zurück zu den Zimmern
-                        </a>
-
+                    <strong><?= htmlspecialchars($roomDetail->name ?? '', ENT_QUOTES, 'UTF-8'); ?> </strong> isimli oda
+                    özellik ekliyorsunuz..
+                    <a href="hotel-rooms?hotel_id=<?= htmlspecialchars($hotel_id, ENT_QUOTES, 'UTF-8'); ?>"
+                        class="btn btn-sm btn-orange mr-4">
+                        <i class="fa fa-long-arrow-left"></i> Zurück zu den Zimmern
+                    </a>
                 </div>
             </div>
         </div>
-
-
 
         <div class="card">
             <form id="koby_form" method="POST" onsubmit="return false" action="" enctype="multipart/form-data">
@@ -30,46 +44,71 @@ $hotelDetail = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$hotel_id
                     <div class="row">
                         <div class="col-md-8 col-lg-8">
                             <div class="row">
-                                <input type="hidden" name="<?=$roomDetail->name?>">
+                                <input type="hidden"
+                                    name="<?= htmlspecialchars($roomDetail->name ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+
                                 <?php
-                                $groupLists = $db->get_results("SELECT * FROM the_hotel_room_features_group ORDER BY rank ASC");
-                                foreach ($groupLists  as $groupList ){
-                                ?>
-
-                                <div class="col-4 mb-4">
-                                    <h6 class="mb-3 lead"><?=$groupList->name?></h6>
-                                    <?php
-                                    $featuresLists = $db->get_results("SELECT * FROM the_hotel_room_features WHERE feature_group_id = '$groupList->features_gid' ORDER BY rank ASC");
-                                    foreach ($featuresLists  as $featuresList ){
-                                        $aktif = $db->get_row("SELECT * FROM the_hotel_room_features_relationship WHERE room_id = '$room_id' AND features_id = '$featuresList->features_id'");
+                                // Fetch feature groups
+                                $stmt = $con->prepare("SELECT * FROM the_hotel_room_features_group ORDER BY rank ASC");
+                                $stmt->execute();
+                                $groupLists = $stmt->get_result();
+                                while ($groupList = $groupLists->fetch_object()) {
                                     ?>
-                                    <div class="form-group">
-                                        <div class="form-check">
-                                            <label class="form-check-label">
-                                                <input type="hidden" name="features[<?=$featuresList->features_id?>]" value="0">
-                                                <input type="checkbox" name="features[<?=$featuresList->features_id?>]" value="1" <?php if(!empty($aktif)){echo 'checked';} ?> >
-                                                <?=$featuresList->name?>
 
-                                            </label>
-                                        </div>
+                                    <div class="col-4 mb-4">
+                                        <h6 class="mb-3 lead">
+                                            <?= htmlspecialchars($groupList->name, ENT_QUOTES, 'UTF-8'); ?></h6>
+                                        <?php
+                                        // Fetch features for each group
+                                        $stmt2 = $con->prepare("SELECT * FROM the_hotel_room_features WHERE feature_group_id = ? ORDER BY rank ASC");
+                                        $stmt2->bind_param("i", $groupList->features_gid);
+                                        $stmt2->execute();
+                                        $featuresLists = $stmt2->get_result();
+                                        while ($featuresList = $featuresLists->fetch_object()) {
+                                            // Check if feature is active
+                                            $stmt3 = $con->prepare("SELECT * FROM the_hotel_room_features_relationship WHERE room_id = ? AND features_id = ?");
+                                            $stmt3->bind_param("ii", $room_id, $featuresList->features_id);
+                                            $stmt3->execute();
+                                            $aktif = $stmt3->get_result()->fetch_object();
+                                            $stmt3->close();
+                                            ?>
+                                            <div class="form-group">
+                                                <div class="form-check">
+                                                    <label class="form-check-label">
+                                                        <input type="hidden"
+                                                            name="features[<?= htmlspecialchars($featuresList->features_id, ENT_QUOTES, 'UTF-8'); ?>]"
+                                                            value="0">
+                                                        <input type="checkbox"
+                                                            name="features[<?= htmlspecialchars($featuresList->features_id, ENT_QUOTES, 'UTF-8'); ?>]"
+                                                            value="1" <?= !empty($aktif) ? 'checked' : ''; ?>>
+                                                        <?= htmlspecialchars($featuresList->name, ENT_QUOTES, 'UTF-8'); ?>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        <?php }
+                                        $stmt2->close();
+                                        ?>
+
                                     </div>
-                                    <?php } ?>
-
-                                </div>
-                                <?php } ?>
-
-
+                                <?php }
+                                $stmt->close();
+                                ?>
                             </div>
                         </div>
+
                         <div class="col-md-4 col-lg-4">
                             <fieldset class="form-fieldset">
-                                <button type="submit"   onclick="kobySubmit('?do=hotel-room&q=features-add&id=<?=$roomDetail->room_id?>','hotel-rooms-features?id=<?=$roomDetail->room_id?>')" class="btn btn-block btn-success btn-lg"> Speichern und Schließen <i class="fe fe-save"></i>  </button>
+                                <button type="submit"
+                                    onclick="kobySubmit('?do=hotel-room&q=features-add&id=<?= htmlspecialchars($roomDetail->room_id, ENT_QUOTES, 'UTF-8'); ?>','hotel-rooms-features?id=<?= htmlspecialchars($roomDetail->room_id, ENT_QUOTES, 'UTF-8'); ?>')"
+                                    class="btn btn-block btn-success btn-lg">
+                                    Speichern und Schließen <i class="fe fe-save"></i>
+                                </button>
                             </fieldset>
                         </div>
+
                     </div>
                 </div>
             </form>
         </div>
     </div>
 </div>
-

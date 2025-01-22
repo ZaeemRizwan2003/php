@@ -24,28 +24,40 @@
                         <tbody>
 
                         <?php
-                        $rows = $db->get_results("SELECT * FROM reservations WHERE rezervation_type = 'tour' ORDER BY id DESC ");
-                        foreach ($rows as $row){
-                            $userDetail = $db->get_row("SELECT * FROM users WHERE id = '$row->user_id'");
-                            if($row->tour_id){
-                                $tourDetail = $db->get_row("SELECT * FROM the_tour WHERE tour_id = '$row->tour_id'");
+                        // Prepared statement to fetch reservation details
+                        $stmt = $con->prepare("SELECT * FROM reservations WHERE rezervation_type = 'tour' ORDER BY id DESC");
+                        $stmt->execute();
+                        $rows = $stmt->get_result();
+
+                        while ($row = $rows->fetch_object()) {
+                            // Fetch user details
+                            $userStmt = $con->prepare("SELECT * FROM users WHERE id = ?");
+                            $userStmt->bind_param('i', $row->user_id);
+                            $userStmt->execute();
+                            $userDetail = $userStmt->get_result()->fetch_object();
+
+                            // Fetch tour details if tour_id is present
+                            if ($row->tour_id) {
+                                $tourStmt = $con->prepare("SELECT * FROM the_tour WHERE tour_id = ?");
+                                $tourStmt->bind_param('i', $row->tour_id);
+                                $tourStmt->execute();
+                                $tourDetail = $tourStmt->get_result()->fetch_object();
                             }
                             ?>
                             <tr>
-                                <th> <span class="tag tag-gray-dark"><?=$row->rezervation_number?></span></th>
+                                <th> <span class="tag tag-gray-dark"><?= htmlspecialchars($row->rezervation_number) ?></span></th>
                                 <th>
-                                    <div><?=$tourDetail->name?></div>
-
-                                    <span class="tag tag-gray-dark"><?=$row->rezervation_type?></span>
+                                    <div><?= htmlspecialchars($tourDetail->name ?? 'No tour') ?></div>
+                                    <span class="tag tag-gray-dark"><?= htmlspecialchars($row->rezervation_type) ?></span>
                                 </th>
-                                <th> <strong><?=$userDetail ->firstname?> <?=$userDetail ->lastname?></strong></th>
-                                <th> <?=$row->total_price?> € </th>
+                                <th> <strong><?= htmlspecialchars($userDetail->firstname) ?> <?= htmlspecialchars($userDetail->lastname) ?></strong></th>
+                                <th> <?= htmlspecialchars($row->total_price) ?> € </th>
                                 <th class="text-center">
-                                    <div class="tag tag-gray"><?=timeTR($row->created_at)?></div>
+                                    <div class="tag tag-gray"><?= timeTR($row->created_at) ?></div>
                                 </th>
                                 <th class="text-center">
-                                    <a href="tour-reservation-info?id=<?=$row->id?>" class="btn btn-orange btn-sm" data-toggle="tooltip" title="Detaylar"><i class="fe fe-search"></i> </a>
-                                    <a href="javascript:void(0)" onclick="kobySingle('<?=$row->id?>','?do=rezervasyon&q=delete','tour-rezervasyon')" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Löschen"><i class="fe fe-trash"></i> </a>
+                                    <a href="tour-reservation-info?id=<?= htmlspecialchars($row->id) ?>" class="btn btn-orange btn-sm" data-toggle="tooltip" title="Detaylar"><i class="fe fe-search"></i> </a>
+                                    <a href="javascript:void(0)" onclick="kobySingle('<?= htmlspecialchars($row->id) ?>','?do=rezervasyon&q=delete','tour-rezervasyon')" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Löschen"><i class="fe fe-trash"></i> </a>
                                 </th>
                             </tr>
                         <?php } ?>

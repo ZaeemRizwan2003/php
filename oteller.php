@@ -1,8 +1,12 @@
 <?php require_once 'req/start.php'; ?>
 <?php require_once 'req/head_start.php'; ?>
-    <title>Hotels - <?=$general['site_title']->value;?></title>
+    <title>Hotels - <?= htmlspecialchars($general['site_title']->value) ?></title>
 
-<?php $sorgu = $db->get_var("SELECT COUNT(*) FROM the_hotel WHERE status = 1"); ?>
+<?php 
+$stmt = $con->prepare("SELECT COUNT(*) FROM the_hotel WHERE status = 1");
+$stmt->execute();
+$sorgu = $stmt->fetchColumn();
+?>
 
 <?php require_once 'req/head.php'; ?>
 <?php require_once 'req/body_start.php'; ?>
@@ -135,7 +139,10 @@
                             $ksayisi = $sorgu;
                             $ssayisi = ceil($ksayisi / $kacar);
                             $nereden = ($sayfa * $kacar) - $kacar;
-                            $oteller = $db->get_results("SELECT * FROM the_hotel LIMIT $kacar OFFSET $nereden");
+                            $stmt = $con->prepare("SELECT * FROM the_hotel LIMIT ? OFFSET ?");
+                            $stmt->execute([$kacar, $nereden]);
+                            $oteller = $stmt->fetchAll(PDO::FETCH_OBJ);
+                            
                                 foreach ($oteller as $otel){
                                     if($otel->picture) {
                                         $min_cover = 'data/hotel/' . $otel->picture;
@@ -143,12 +150,14 @@
                                         $min_cover = 'data/no_hotel_pic.png';
                                     }
                                     $province = $otel->province;
-                                    $proSrc = $db->get_row("SELECT * FROM il WHERE id = '$province'");
-
-                                    $state = $otel->state;
-                                    $staSrc = $db->get_row("SELECT * FROM ilce WHERE id = '$state'");
-
-                                //$enkucukFiyat = $db->get_row("SELECT * FROM the_tour_date WHERE tour_id = '$tur->tour_id' ORDER BY person_price ASC LIMIT 1")
+                                    $stmt = $con->prepare("SELECT * FROM il WHERE id = ?");
+                                    $stmt->execute([$province]);
+                                    $proSrc = $stmt->fetch();
+                                    
+                                    $stmt = $con->prepare("SELECT * FROM ilce WHERE id = ?");
+                                    $stmt->execute([$state]);
+                                    $staSrc = $stmt->fetch();
+                                    
                         ?>
 
                         <div class="col-md-4 isotope-item popular">

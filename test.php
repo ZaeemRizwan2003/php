@@ -6,42 +6,49 @@
  * Time: 14:37
  */
 
+date_default_timezone_set('Etc/GMT-3'); // Set timezone
 
-date_default_timezone_set('Etc/GMT-3');
-//echo date("d.m.Y  H:i:s");
-//echo date('d.m.Y H:i:s', time());
-//echo time();
-
-
-
-    function sifreUret($uzunluk, $tip=5)
+/**
+ * Generate a password with a specified length and type.
+ * 
+ * @param int $uzunluk Length of the password.
+ * @param int $tip The type of password (1 for numbers, 2 for uppercase, 3 for lowercase, 5 for mixed).
+ * @return string The generated password.
+ */
+function sifreUret(int $uzunluk, int $tip = 5): string
 {
- $sifre ="";
- for($i=0;$i<$uzunluk;$i++)
- {
-//Sadece sayı üretme
-if ($tip==1)
-$sifre.=chr(rand(48,57));//0-9
+    $sifre = '';
+    $sec = 0;
+    
+    // Generate the password based on the specified type
+    for ($i = 0; $i < $uzunluk; $i++) {
+        // Only numbers
+        if ($tip == 1) {
+            $sifre .= chr(random_int(48, 57)); // 0-9
+        }
+        // Uppercase letters
+        elseif ($tip == 2) {
+            $sifre .= chr(random_int(65, 90)); // A-Z
+        }
+        // Lowercase letters
+        elseif ($tip == 3) {
+            $sifre .= chr(random_int(97, 122)); // a-z
+        }
+        // Mixed password (letters and numbers)
+        elseif ($tip == 5) {
+            $sec = random_int(1, 4);
+            if ($sec == 2) {
+                $sifre .= chr(random_int(65, 90)); // A-Z
+            } elseif ($sec == 3) {
+                $sifre .= chr(random_int(97, 122)); // a-z
+            } elseif ($sec == 4) {
+                $sifre .= chr(random_int(48, 57)); // 0-9
+            }
+        }
+    }
 
-//Büyük harf üretme
-    elseif($tip==2)
-$sifre.=chr(rand(65,90));//A-Z
-
-//Küçük harf üretme
-elseif($tip==3)
-$sifre.=chr(rand(97,122));//a-z
-
-//karışık şifre üretme
-elseif($tip==5){
-$sec=rand(1,4);  
-if ($sec==2) $sifre.=chr(rand(65,90));//A-Z
-elseif ($sec==3) $sifre.=chr(rand(97,122));//a-z
-elseif ($sec==4) $sifre.=chr(rand(48,57));//0-9
+    return $sifre;
 }
- 
- }
- return $sifre;
-}
- 
-$sifre = sifreUret(10);
+
+$sifre = sifreUret(10); // Generate a 10-character password
 echo $sifre;

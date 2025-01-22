@@ -1,13 +1,13 @@
 <?php echo !defined("ADMIN") ? die("Hacking?") : null; ?>
 <?php
 $id = g('id');
-$view = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$id'");
+$view = $con->query("SELECT * FROM the_hotel WHERE hotel_id = '$id'")->fetch_object();
 ?>
 <div class="my-3 my-md-5">
     <div class="container">
         <div class="page-header">
             <h1 class="page-title">
-                <strong><?=$view->name?></strong> Resim Ekle
+                <strong><?= $view->name ?></strong> Resim Ekle
             </h1>
         </div>
 
@@ -18,9 +18,9 @@ $view = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$id'");
                     <div class="row">
                         <div class="col-md-8 col-lg-8">
 
-                            <input type="hidden" name="hotel_id" value="<?=$view->name?>" >
+                            <input type="hidden" name="hotel_id" value="<?= $view->name ?>">
                             <div class="form-group">
-                                <label for="picture"> <i class="fa fa-picture-o"></i>  Resimleri Seç </label>
+                                <label for="picture"> <i class="fa fa-picture-o"></i> Resimleri Seç </label>
                                 <input type="file" class="form-control" multiple id="picture" name="pictures[]">
                             </div>
 
@@ -28,10 +28,10 @@ $view = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$id'");
                         <div class="col-md-4 col-lg-4">
 
                             <div class="form-group">
-                                <label class="form-label">  Anzeigen?</label>
+                                <label class="form-label"> Anzeigen?</label>
                                 <div class="selectgroup w-100">
                                     <label class="selectgroup-item">
-                                        <input type="radio" name="status" value="1" class="selectgroup-input"checked>
+                                        <input type="radio" name="status" value="1" class="selectgroup-input" checked>
                                         <span class="selectgroup-button">Ja, anzeigen.</span>
                                     </label>
                                     <label class="selectgroup-item">
@@ -42,7 +42,10 @@ $view = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$id'");
                             </div>
 
                             <fieldset class="form-fieldset">
-                                <button type="submit" onclick="kobySubmit('?do=hotel&q=pic-add&id=<?=$id?>','hotel-images-list?id=<?=$id?>')" class="btn btn-block btn-success btn-lg"> Kaydet ve Düzenle <i class="fe fe-save"></i>  </button>
+                                <button type="submit"
+                                    onclick="kobySubmit('?do=hotel&q=pic-add&id=<?= $id ?>','hotel-images-list?id=<?= $id ?>')"
+                                    class="btn btn-block btn-success btn-lg"> Kaydet ve Düzenle <i
+                                        class="fe fe-save"></i> </button>
                             </fieldset>
                         </div>
                     </div>
@@ -51,4 +54,3 @@ $view = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$id'");
         </div>
     </div>
 </div>
-

@@ -27,32 +27,40 @@
                         <tbody>
 
                         <?php
-                        $list = $db->get_results("SELECT * FROM the_tour ORDER BY tour_id DESC");
-                        foreach ($list as $view){
+                        // Prepared statement to fetch tours
+                        $stmt = $con->prepare("SELECT * FROM the_tour ORDER BY tour_id DESC");
+                        $stmt->execute();
+                        $list = $stmt->get_result();
+
+                        while ($view = $list->fetch_object()) {
                             ?>
 
                             <tr>
-                                <th>#<?=$view->tour_id?></th>
+                                <th>#<?= htmlspecialchars($view->tour_id) ?></th>
                                 <th>
-                                    <strong><?=$view->name?></strong>
+                                    <strong><?= htmlspecialchars($view->name) ?></strong>
                                 </th>
                                 <th>
                                     <?php
-                                    $Category = $db->get_row("SELECT * FROM the_tour_category WHERE category_id = '$view->tour_category_id' ");
-                                    echo $Category->name;
+                                    // Prepared statement to fetch category
+                                    $categoryStmt = $con->prepare("SELECT * FROM the_tour_category WHERE category_id = ?");
+                                    $categoryStmt->bind_param('i', $view->tour_category_id);
+                                    $categoryStmt->execute();
+                                    $category = $categoryStmt->get_result()->fetch_object();
+                                    echo htmlspecialchars($category->name);
                                     ?>
                                 </th>
                                 <th class="text-center">
                                     <div class="mb-2">
-                                        <a href="tour-images-add?id=<?=$view->tour_id?>" class="btn btn-azure btn-sm" data-toggle="tooltip" title="Bild hinzufügen"><i class="fe fe-camera"></i> </a>
-                                        <a href="tour-images-list?id=<?=$view->tour_id?>" class="btn btn-teal btn-sm" data-toggle="tooltip" title="Bilder"><i class="fe fe-image"></i> </a>
-                                        <a href="tour-edit?id=<?=$view->tour_id?>" class="btn btn-blue btn-sm" data-toggle="tooltip" title="Bearbeiten"><i class="fe fe-edit"></i> </a>
+                                        <a href="tour-images-add?id=<?= htmlspecialchars($view->tour_id) ?>" class="btn btn-azure btn-sm" data-toggle="tooltip" title="Bild hinzufügen"><i class="fe fe-camera"></i> </a>
+                                        <a href="tour-images-list?id=<?= htmlspecialchars($view->tour_id) ?>" class="btn btn-teal btn-sm" data-toggle="tooltip" title="Bilder"><i class="fe fe-image"></i> </a>
+                                        <a href="tour-edit?id=<?= htmlspecialchars($view->tour_id) ?>" class="btn btn-blue btn-sm" data-toggle="tooltip" title="Bearbeiten"><i class="fe fe-edit"></i> </a>
                                     </div>
 
-                                    <a href="tour-date-add?tour_id=<?=$view->tour_id?>" class="btn btn-pink btn-sm" data-toggle="tooltip" title="Datum hinzufügen "> <i class="fa fa-calendar-plus-o"></i>  </a>
-                                    <a href="tour-dates-list?tour_id=<?=$view->tour_id?>" class="btn btn-orange btn-sm" data-toggle="tooltip" title="Datum hinzufügen"><i class="fe fe-calendar"></i> </a>
-                                    <a href="tour-programs-list?tour_id=<?=$view->tour_id?>" class="btn btn-purple btn-sm" data-toggle="tooltip" title="Inhalte"><i class="fe fe-briefcase"></i> </a>
-                                    <a href="javascript:void(0)" onclick="kobySingle('<?=$view->tour_id?>','?do=tour&q=delete','tour-list')" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Löschen"><i class="fe fe-trash"></i> </a>
+                                    <a href="tour-date-add?tour_id=<?= htmlspecialchars($view->tour_id) ?>" class="btn btn-pink btn-sm" data-toggle="tooltip" title="Datum hinzufügen "> <i class="fa fa-calendar-plus-o"></i>  </a>
+                                    <a href="tour-dates-list?tour_id=<?= htmlspecialchars($view->tour_id) ?>" class="btn btn-orange btn-sm" data-toggle="tooltip" title="Datum hinzufügen"><i class="fe fe-calendar"></i> </a>
+                                    <a href="tour-programs-list?tour_id=<?= htmlspecialchars($view->tour_id) ?>" class="btn btn-purple btn-sm" data-toggle="tooltip" title="Inhalte"><i class="fe fe-briefcase"></i> </a>
+                                    <a href="javascript:void(0)" onclick="kobySingle('<?= htmlspecialchars($view->tour_id) ?>','?do=tour&q=delete','tour-list')" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Löschen"><i class="fe fe-trash"></i> </a>
                                 </th>
                             </tr>
                         <?php } ?>

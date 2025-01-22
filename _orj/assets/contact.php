@@ -1,58 +1,57 @@
 <?php
 
-if(!$_POST) exit;
+if (!$_POST) exit;
 
 // Email verification, do not edit.
-function isEmail($email_contact ) {
-	return(preg_match("/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,})$/",$email_contact ));
+function isEmail($email_contact)
+{
+    return (preg_match("/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,})$/", $email_contact));
 }
 
 if (!defined("PHP_EOL")) define("PHP_EOL", "\r\n");
 
-$name_contact     = $_POST['name_contact'];
-$lastname_contact    = $_POST['lastname_contact'];
-$email_contact    = $_POST['email_contact'];
-$phone_contact   = $_POST['phone_contact'];
-$message_contact = $_POST['message_contact'];
-$verify_contact   = $_POST['verify_contact'];
+$name_contact = $_POST['name_contact'] ?? '';
+$lastname_contact = $_POST['lastname_contact'] ?? '';
+$email_contact = $_POST['email_contact'] ?? '';
+$phone_contact = $_POST['phone_contact'] ?? '';
+$message_contact = $_POST['message_contact'] ?? '';
+$verify_contact = $_POST['verify_contact'] ?? '';
 
-if(trim($name_contact) == '') {
-	echo '<div class="error_message">You must enter your Name.</div>';
-	exit();
-} else if(trim($lastname_contact ) == '') {
-	echo '<div class="error_message">You must enter your Last name.</div>';
-	exit();
-} else if(trim($email_contact) == '') {
-	echo '<div class="error_message">Please enter a valid email address.</div>';
-	exit();
-} else if(!isEmail($email_contact)) {
-	echo '<div class="error_message">You have enter an invalid e-mail address, try again.</div>';
-	exit();
-	} else if(trim($phone_contact) == '') {
-	echo '<div class="error_message">Please enter a valid phone number.</div>';
-	exit();
-} else if(!is_numeric($phone_contact)) {
-	echo '<div class="error_message">Phone number can only contain numbers.</div>';
-	exit();
-} else if(trim($message_contact) == '') {
-	echo '<div class="error_message">Please enter your message.</div>';
-	exit();
-} else if(!isset($verify_contact) || trim($verify_contact) == '') {
-	echo '<div class="error_message"> Please enter the verification number.</div>';
-	exit();
-} else if(trim($verify_contact) != '4') {
-	echo '<div class="error_message">The verification number you entered is incorrect.</div>';
-	exit();
+if (trim($name_contact) == '') {
+    echo '<div class="error_message">You must enter your Name.</div>';
+    exit();
+} elseif (trim($lastname_contact) == '') {
+    echo '<div class="error_message">You must enter your Last name.</div>';
+    exit();
+} elseif (trim($email_contact) == '') {
+    echo '<div class="error_message">Please enter a valid email address.</div>';
+    exit();
+} elseif (!isEmail($email_contact)) {
+    echo '<div class="error_message">You have entered an invalid e-mail address, try again.</div>';
+    exit();
+} elseif (trim($phone_contact) == '') {
+    echo '<div class="error_message">Please enter a valid phone number.</div>';
+    exit();
+} elseif (!is_numeric($phone_contact)) {
+    echo '<div class="error_message">Phone number can only contain numbers.</div>';
+    exit();
+} elseif (trim($message_contact) == '') {
+    echo '<div class="error_message">Please enter your message.</div>';
+    exit();
+} elseif (!isset($verify_contact) || trim($verify_contact) == '') {
+    echo '<div class="error_message"> Please enter the verification number.</div>';
+    exit();
+} elseif (trim($verify_contact) != '4') {
+    echo '<div class="error_message">The verification number you entered is incorrect.</div>';
+    exit();
 }
 
-if(get_magic_quotes_gpc()) {
-	$message_contact = stripslashes($message_contact);
+if (get_magic_quotes_gpc()) {
+    $message_contact = stripslashes($message_contact);
 }
 
-
-//$address = "HERE your email address";
+// $address = "HERE your email address"; 
 $address = "info@domain.com";
-
 
 // Below the subject of the email
 $e_subject = 'You\'ve been contacted by ' . $name_contact . '.';
@@ -62,7 +61,7 @@ $e_body = "You have been contacted by $name_contact $lastname_contact with addit
 $e_content = "\"$message_contact\"" . PHP_EOL . PHP_EOL;
 $e_reply = "You can contact $lastname_contact via email, $email_contact or via phone $phone_contact";
 
-$msg = wordwrap( $e_body . $e_content . $e_reply, 70 );
+$msg = wordwrap($e_body . $e_content . $e_reply, 70);
 
 $headers = "From: $email_contact" . PHP_EOL;
 $headers .= "Reply-To: $email_contact" . PHP_EOL;
@@ -73,19 +72,19 @@ $headers .= "Content-Transfer-Encoding: quoted-printable" . PHP_EOL;
 $user = "$email_contact";
 $usersubject = "Thank You";
 $userheaders = "From: info@udema.com\n";
-$usermessage = "Thank you for contact UDEMA. We will reply shortly!";
-mail($user,$usersubject,$usermessage,$userheaders);
+$usermessage = "Thank you for contacting UDEMA. We will reply shortly!";
+mail($user, $usersubject, $usermessage, $userheaders);
 
-if(mail($address, $e_subject, $msg, $headers)) {
+if (mail($address, $e_subject, $msg, $headers)) {
 
-	// Success message
-	echo "<div id='success_page' style='padding:25px 0'>";
-	echo "<strong >Email Sent.</strong><br>";
-	echo "Thank you <strong>$name_contact</strong>,<br> your message has been submitted. We will contact you shortly.";
-	echo "</div>";
+    // Success message
+    echo "<div id='success_page' style='padding:25px 0'>";
+    echo "<strong>Email Sent.</strong><br>";
+    echo "Thank you <strong>$name_contact</strong>,<br> your message has been submitted. We will contact you shortly.";
+    echo "</div>";
 
 } else {
 
-	echo 'ERROR!';
+    echo 'ERROR!';
 
 }

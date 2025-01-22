@@ -1,7 +1,11 @@
 <?php echo !defined("ADMIN") ? die("Hacking?") : null; ?>
 <?php
 $hotel_id = g('hotel_id');
-$hotelDetail = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$hotel_id'");
+
+// Using PDO method for fetching a single row
+$stmt = $con->prepare("SELECT * FROM the_hotel WHERE hotel_id = ?");
+$stmt->execute([$hotel_id]);
+$hotelDetail = $stmt->fetch();
 ?>
 <div class="my-3 my-md-5">
     <div class="container">
@@ -11,18 +15,18 @@ $hotelDetail = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$hotel_id
             </h1>
             <div class="page-options d-flex ">
                 <div class="page-subtitle ">
-                    <?php if($hotel_id){ ?>
-                    <a href="hotel-rooms?hotel_id=<?=$hotel_id?>"  class="btn btn-sm btn-orange mr-4"> <i class="fa fa-long-arrow-left"></i> Zurück zu den Zimmern
-                    </a><strong><?=$hotelDetail->name?> </strong> isimli otele oda ekliyorsunuz..
-                    <?php }else{ ?>
-                    <a href="hotel-room-list"  class="btn btn-sm btn-orange mr-4"> <i class="fa fa-long-arrow-left"></i> Zurück zu den Zimmern
-                    </a>
+                    <?php if ($hotel_id) { ?>
+                        <a href="hotel-rooms?hotel_id=<?= $hotel_id ?>" class="btn btn-sm btn-orange mr-4"> <i
+                                class="fa fa-long-arrow-left"></i> Zurück zu den Zimmern
+                        </a><strong><?= $hotelDetail->$name ?> </strong> isimli otele oda ekliyorsunuz..
+                    <?php } else { ?>
+                        <a href="hotel-room-list" class="btn btn-sm btn-orange mr-4"> <i class="fa fa-long-arrow-left"></i>
+                            Zurück zu den Zimmern
+                        </a>
                     <?php } ?>
                 </div>
             </div>
         </div>
-
-
 
         <div class="card">
             <form id="koby_form" method="POST" onsubmit="return false" action="" enctype="multipart/form-data">
@@ -32,8 +36,8 @@ $hotelDetail = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$hotel_id
                             <div class="form-group">
                                 <label class="form-label">Zimmer Name</label>
                                 <input type="text" class="form-control" name="name">
-                                <?php if($hotel_id){ ?>
-                                <input type="hidden" name="hotel_id" value="<?=$hotel_id?>">
+                                <?php if ($hotel_id) { ?>
+                                    <input type="hidden" name="hotel_id" value="<?= $hotel_id ?>">
                                 <?php } ?>
                             </div>
 
@@ -46,13 +50,15 @@ $hotelDetail = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$hotel_id
                                 <div class="col-lg-6 col-md-6 col-sm-12">
                                     <div class="form-group">
                                         <label class="form-label"> Preis Erwachsene</label>
-                                        <input type="text" class="form-control" name="person_price" placeholder="Örnek: 10.00">
+                                        <input type="text" class="form-control" name="person_price"
+                                            placeholder="Örnek: 10.00">
                                     </div>
                                 </div>
                                 <div class="col-lg-6 col-md-6 col-sm-12">
                                     <div class="form-group">
                                         <label class="form-label"> Preis Kind</label>
-                                        <input type="text" class="form-control" name="child_price" placeholder="Örnek: 10.00">
+                                        <input type="text" class="form-control" name="child_price"
+                                            placeholder="Örnek: 10.00">
                                     </div>
                                 </div>
                             </div>
@@ -61,32 +67,40 @@ $hotelDetail = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$hotel_id
                                 <div class="col-lg-6 col-md-6 col-sm-12">
                                     <div class="form-group">
                                         <label class="form-label"> Zimmer quadratmeter olarak</label>
-                                        <input type="text" class="form-control" name="room_size" placeholder="Örnek: 120">
+                                        <input type="text" class="form-control" name="room_size"
+                                            placeholder="Örnek: 120">
                                     </div>
                                 </div>
                                 <div class="col-lg-6 col-md-6 col-sm-12">
                                     <div class="form-group">
                                         <label class="form-label"> Bett Anzahl</label>
-                                        <input type="text" class="form-control" name="beds_number" placeholder="Örnek: 2">
+                                        <input type="text" class="form-control" name="beds_number"
+                                            placeholder="Örnek: 2">
                                     </div>
                                 </div>
                             </div>
-
-
                         </div>
                         <div class="col-md-4 col-lg-4">
                             <fieldset class="form-fieldset">
-
-
                                 <div class="form-group">
                                     <label class="form-label">Zugeordnet zum Hotel</label>
-                                    <select name="hotel_id" id="hotel_id" class="form-control custom-select" <?php if($hotel_id){echo 'disabled';} ?> >
+                                    <select name="hotel_id" id="hotel_id" class="form-control custom-select" <?php if ($hotel_id) {
+                                        echo 'disabled';
+                                    } ?> >
                                         <option value="0"> Otel Seçiniz</option>
                                         <?php
-                                            $hotelLists = $db->get_results("SELECT * FROM the_hotel ORDER BY hotel_id DESC");
-                                            foreach ($hotelLists as $hotelLis){
-                                        ?>
-                                        <option value="<?=$hotelLis->hotel_id?>" <?php if($hotel_id == $hotelLis->hotel_id){echo 'selected';} ?> > <?=$hotelLis->name?></option>
+                                        // Using PDO method for fetching multiple rows
+                                        $result = $con->query("SELECT * FROM the_hotel ORDER BY hotel_id DESC");
+                                        $hotelLists = [];
+                                        while ($hotelLis = $result->fetch_object()) {
+                                            $hotelLists[] = $hotelLis;
+                                        }
+                                        foreach ($hotelLists as $hotelLis) {
+                                            ?>
+                                            <option value="<?= $hotelLis->hotel_id ?>" <?php if ($hotel_id == $hotelLis->hotel_id) {
+                                                echo 'selected';
+                                            } ?>>
+                                                <?= $hotelLis->name ?></option>
                                         <?php } ?>
                                     </select>
                                 </div>
@@ -99,10 +113,11 @@ $hotelDetail = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$hotel_id
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="form-label">  Anzeigen?</label>
+                                    <label class="form-label"> Anzeigen?</label>
                                     <div class="selectgroup w-100">
                                         <label class="selectgroup-item">
-                                            <input type="radio" name="status" value="1" class="selectgroup-input" checked="">
+                                            <input type="radio" name="status" value="1" class="selectgroup-input"
+                                                checked="">
                                             <span class="selectgroup-button">Ja, anzeigen.</span>
                                         </label>
                                         <label class="selectgroup-item">
@@ -112,8 +127,9 @@ $hotelDetail = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$hotel_id
                                     </div>
                                 </div>
 
-
-                                <button type="submit"   onclick="kobySubmit('?do=hotel-room&q=add','hotel-list')" class="btn btn-block btn-success btn-lg"> Speichern und Schließen <i class="fe fe-save"></i>  </button>
+                                <button type="submit" onclick="kobySubmit('?do=hotel-room&q=add','hotel-list')"
+                                    class="btn btn-block btn-success btn-lg"> Speichern und Schließen <i
+                                        class="fe fe-save"></i> </button>
 
                             </fieldset>
                         </div>
@@ -123,4 +139,3 @@ $hotelDetail = $db->get_row("SELECT * FROM the_hotel WHERE hotel_id = '$hotel_id
         </div>
     </div>
 </div>
-
