@@ -4,9 +4,10 @@ $id = g('id');
 
 // Prepare and execute the query to get hotel category by ID
 $stmt = $con->prepare("SELECT * FROM the_hotel_category WHERE category_id = :id");
-$stmt->bindParam(':id', $id, PDO::PARAM_INT);
+$stmt->bindValue(':id', $id, PDO::PARAM_INT);  // Using bindValue instead of bindParam
 $stmt->execute();
 $view = $stmt->fetch();
+
 ?>
 <div class="my-3 my-md-5">
     <div class="container">
