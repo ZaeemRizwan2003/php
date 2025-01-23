@@ -1,23 +1,36 @@
 <?php
-require_once 'req/start.php'; 
-require_once 'req/head_start.php'; 
+require_once 'req/start.php';
+require_once 'req/head_start.php';
 
-// Ensure the database connection is established using PDO
+// Ensure the database connection is established using MySQLi
 $link = filter_input(INPUT_GET, 'link', FILTER_SANITIZE_STRING);
 
 // Fetch category details using prepared statements
-$query = "SELECT * FROM the_tour_category WHERE slug = :link";
+$query = "SELECT * FROM the_tour_category WHERE slug = ?";
 $stmt = $con->prepare($query);
-$stmt->bindParam(':link', $link, PDO::PARAM_STR);
+if (!$stmt) {
+    die("Prepare failed: " . $con->error);
+}
+$stmt->bind_param('s', $link);
 $stmt->execute();
-$kategoriBul = $stmt->fetch();
+$result = $stmt->get_result();
+$kategoriBul = $result->fetch_object();
+
+if (!$kategoriBul) {
+    die("No category found for the provided link.");
+}
 
 // Fetch the count of tours in the category
-$queryCount = "SELECT COUNT(*) FROM the_tour WHERE tour_category_id = :category_id AND status = 1";
+$queryCount = "SELECT COUNT(*) FROM the_tour WHERE tour_category_id = ? AND status = 1";
 $stmtCount = $con->prepare($queryCount);
-$stmtCount->bindParam(':category_id', $kategoriBul->category_id, PDO::PARAM_INT);
+if (!$stmtCount) {
+    die("Prepare failed: " . $con->error);
+}
+$stmtCount->bind_param('i', $kategoriBul->category_id);
 $stmtCount->execute();
-$sorgu = $stmtCount->fetchColumn();
+$stmtCount->bind_result($sorgu);
+$stmtCount->fetch();
+$stmtCount->close();
 ?>
 
 <title><?= htmlspecialchars($kategoriBul->name) ?> </title>
@@ -37,7 +50,7 @@ $sorgu = $stmtCount->fetchColumn();
             </div>
         </div>
     </section>
-    
+
     <div class="container margin_60_35">
         <div class="row">
             <aside class="col-lg-3">
@@ -59,41 +72,54 @@ $sorgu = $stmtCount->fetchColumn();
                             $nereden = ($sayfa * $kacar) - $kacar;
 
                             // Fetch the tours for this category
-                            $queryTours = "SELECT * FROM the_tour WHERE tour_category_id = :category_id LIMIT :limit OFFSET :offset";
+                            $queryTours = "SELECT * FROM the_tour WHERE tour_category_id = ? LIMIT ?, ?";
                             $stmtTours = $con->prepare($queryTours);
-                            $stmtTours->bindParam(':category_id', $kategoriBul->category_id, PDO::PARAM_INT);
-                            $stmtTours->bindParam(':limit', $kacar, PDO::PARAM_INT);
-                            $stmtTours->bindParam(':offset', $nereden, PDO::PARAM_INT);
+                            if (!$stmtTours) {
+                                die("Prepare failed: " . $con->error);
+                            }
+                            $stmtTours->bind_param('iii', $kategoriBul->category_id, $nereden, $kacar);
                             $stmtTours->execute();
-                            $turlar = $stmtTours->fetchAll(PDO::FETCH_OBJ);
+                            $resultTours = $stmtTours->get_result();
+                            $turlar = $resultTours->fetch_all(MYSQLI_ASSOC);
 
                             foreach ($turlar as $tur) {
-                                $min_cover = $tur->picture;
-                                
+                                $min_cover = $tur['picture'];
+
                                 // Fetch the lowest price for this tour
-                                $queryPrice = "SELECT * FROM the_tour_date WHERE tour_id = :tour_id ORDER BY person_price ASC LIMIT 1";
+                                $queryPrice = "SELECT * FROM the_tour_date WHERE tour_id = ? ORDER BY person_price ASC LIMIT 1";
                                 $stmtPrice = $con->prepare($queryPrice);
-                                $stmtPrice->bindParam(':tour_id', $tur->tour_id, PDO::PARAM_INT);
+                                if (!$stmtPrice) {
+                                    die("Prepare failed: " . $con->error);
+                                }
+                                $stmtPrice->bind_param('i', $tur['tour_id']);
                                 $stmtPrice->execute();
-                                $enkucukFiyat = $stmtPrice->fetch();
-                            ?>
+                                $resultPrice = $stmtPrice->get_result();
+                                $enkucukFiyat = $resultPrice->fetch_object();
+                                ?>
                                 <div class="col-md-6 isotope-item popular">
                                     <div class="box_grid">
                                         <figure>
-                                            <a href="tur/<?= htmlspecialchars($tur->slug . '/' . $tur->tour_id) ?>">
-                                                <img src="data/tour/<?= htmlspecialchars($min_cover) ?>" class="img-fluid" alt="" width="800" height="533">
+                                            <a href="tur/<?= htmlspecialchars($tur['slug'] . '/' . $tur['tour_id']) ?>">
+                                                <img src="data/tour/<?= htmlspecialchars($min_cover) ?>" class="img-fluid"
+                                                    alt="" width="800" height="533">
                                                 <div class="read_more"><span>Mehr Erfahren</span></div>
                                             </a>
                                             <small>... </small>
                                         </figure>
                                         <div class="wrapper">
-                                            <h3><a href="tur/<?= htmlspecialchars($tur->slug . '/' . $tur->tour_id) ?>"><?= htmlspecialchars($tur->name) ?> </a></h3>
+                                            <h3><a href="tur/<?= htmlspecialchars($tur['slug'] . '/' . $tur['tour_id']) ?>"><?= htmlspecialchars($tur['name']) ?>
+                                                </a></h3>
                                             <p>.... </p>
-                                            <span class="price">Preis: <strong> <?= htmlspecialchars($enkucukFiyat->person_price) ?> € </strong> /kişi başı</span>
+                                            <span class="price">Preis: <strong>
+                                                    <?= htmlspecialchars($enkucukFiyat->person_price) ?> € </strong> /kişi
+                                                başı</span>
                                         </div>
                                         <ul>
                                             <li><i class="icon_clock_alt"></i> 3 Gün </li>
-                                            <li><div class="score"><span>Punkte<em>350 Görüş</em></span><strong>8.9</strong></div></li>
+                                            <li>
+                                                <div class="score"><span>Punkte<em>350 Görüş</em></span><strong>8.9</strong>
+                                                </div>
+                                            </li>
                                         </ul>
                                     </div>
                                 </div>
@@ -105,7 +131,8 @@ $sorgu = $stmtCount->fetchColumn();
                     <div class="clearfix"></div>
                     <div class="row">
                         <div class="col-md-12">
-                            <p class="category-pagination-sign text-center">Gesamt <strong><?= $sorgu ?></strong> <strong><?= htmlspecialchars($kategoriBul->name) ?></strong> tur mevcuttur.</p>
+                            <p class="category-pagination-sign text-center">Gesamt <strong><?= $sorgu ?></strong>
+                                <strong><?= htmlspecialchars($kategoriBul->name) ?></strong> tur mevcuttur.</p>
                         </div>
 
                         <?php if ($ssayisi > 1) { ?>
@@ -114,20 +141,10 @@ $sorgu = $stmtCount->fetchColumn();
                                 <nav class="text-center">
                                     <ul class="pagination category-pagination">
                                         <?php
-                                        $en_az_orta = ceil($kacar / 2);
-                                        $en_fazla_orta = ($ssayisi + 1) - $en_az_orta;
-                                        $sayfa_orta = $sayfa;
-                                        if ($sayfa_orta < $en_az_orta) $sayfa_orta = $en_az_orta;
-                                        if ($sayfa_orta > $en_fazla_orta) $sayfa_orta = $en_fazla_orta;
-                                        $sol_sayfalar = round($sayfa_orta - (($kacar - 1) / 2));
-                                        $sag_sayfalar = round((($kacar - 1) / 2) + $sayfa_orta);
-                                        if ($sol_sayfalar < 1) $sol_sayfalar = 1;
-                                        if ($sag_sayfalar > $ssayisi) $sag_sayfalar = $ssayisi;
-
                                         for ($s = 1; $s <= $ssayisi; $s++) {
-                                            echo $sayfa == 1 ? '' : '<li class="page-item"><a class="page-link" href="turlar/' . htmlspecialchars($kategoriBul->slug . '/' . $kategoriBul->category_id . '/sayfa/1#start') . '"> <i class="fa fa-angle-left"></i> İlk sayfa</a></li>';
-                                            echo $sayfa == $s ? '<li class="page-item active"><a class="page-link" href="turlar/' . htmlspecialchars($kategoriBul->slug . '/' . $kategoriBul->category_id . '/sayfa/' . $s . '#start') . '">' . $s . '</a></li>' :
-                                                '<li class="page-item"><a class="page-link" href="turlar/' . htmlspecialchars($kategoriBul->slug . '/' . $kategoriBul->category_id . '/sayfa/' . $s . '#start') . '">' . $s . '</a></li>';
+                                            echo $sayfa == $s
+                                                ? '<li class="page-item active"><a class="page-link" href="turlar/' . htmlspecialchars($kategoriBul->slug . '/' . $kategoriBul->category_id . '/sayfa/' . $s . '#start') . '">' . $s . '</a></li>'
+                                                : '<li class="page-item"><a class="page-link" href="turlar/' . htmlspecialchars($kategoriBul->slug . '/' . $kategoriBul->category_id . '/sayfa/' . $s . '#start') . '">' . $s . '</a></li>';
                                         }
                                         ?>
                                     </ul>

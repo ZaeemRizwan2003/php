@@ -1,6 +1,7 @@
-<base href="https://www.sungate24.com/app/">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<!-- <base href="https://www.sungate24.com/app/"> -->
+<base href="http://localhost/sungate24/app/" <meta charset="UTF-8">
+<meta name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="ie=edge">
 <meta http-equiv="Content-Language" content="en" />
 <meta name="msapplication-TileColor" content="#2d89ef">
@@ -18,12 +19,14 @@
 <link href="./assets/css/dashboard.css" rel="stylesheet" />
 <link href="./assets/plugins/toastr/toastr.css" rel="stylesheet" />
 <link href="./assets/plugins/datatable/datatables.min.css" rel="stylesheet" />
-<link  href="./assets/plugins/datepicker/datepicker.css" rel="stylesheet">
+<link href="./assets/plugins/datepicker/datepicker.css" rel="stylesheet">
 
 
 <link href="./assets/css/custom.css" rel="stylesheet" />
 <!-- Dashboard Core -->
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyASCo3LpzTJiLqllNSJMGdgApugeGr0VWg&sensor=false&libraries=places" type="text/javascript"></script>
+<script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyASCo3LpzTJiLqllNSJMGdgApugeGr0VWg&sensor=false&libraries=places"
+    type="text/javascript"></script>
 
 <script src="./assets/js/vendors/jquery-3.2.1.min.js"></script>
 <script src="./assets/js/vendors/bootstrap.bundle.min.js"></script>

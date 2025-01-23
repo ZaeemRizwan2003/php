@@ -1,12 +1,15 @@
 <?php require_once 'req/start.php'; ?>
 <?php require_once 'req/head_start.php'; ?>
-
 <?php
-    $link = g('link');
-    // Use prepared statements to avoid SQL injection
-    $stmt = $con->prepare("SELECT * FROM the_tour WHERE slug = ?");
-    $stmt->execute([$link]);
-    $detail = $stmt->fetch();
+$link = g('link');
+// Use prepared statements to avoid SQL injection
+$stmt = $con->prepare("SELECT * FROM the_tour WHERE slug = ?");
+
+// Bind the parameters (assuming $link is a string)
+$stmt->bind_param("s", $link); // "s" for string
+$stmt->execute();
+$result = $stmt->get_result();
+$detail = $result->fetch_object();
 ?>
 
 <meta name="author" content="Ansonika">
@@ -28,19 +31,27 @@
                 <h1 class="fadeInUp"><span></span> <?= htmlspecialchars($detail->name) ?> </h1>
             </div>
             <span class="magnific-gallery">
-                <?php 
-                    $i = 0;
-                    // Securely get the tour pictures using a prepared statement
-                    $stmt = $con->prepare("SELECT * FROM the_tour_picture WHERE tour_id = ?");
-                    $stmt->execute([$detail->tour_id]);
-                    $pictures = $stmt->fetchAll();
-                    $picturesRows = count($pictures);
-                    foreach ($pictures as $picture) {
-                        $i++;
-                        $content = $picture->content ?: $detail->name;
-                ?>
-                    <a href="data/tour/pictures/<?= htmlspecialchars($picture->big_picture) ?>" <?php if ($i == 1) { echo 'class="btn_photos"';} ?> title="<?= htmlspecialchars($content) ?>" data-effect="mfp-zoom-in">
-                        <?php if ($i == 1) { echo 'Tur Resimleri (' . $picturesRows . ' Adet)';} ?>
+                <?php
+                $i = 0;
+                // Securely get the tour pictures using a prepared statement
+                $stmt = $con->prepare("SELECT * FROM the_tour_picture WHERE tour_id = ?");
+
+                // Bind the parameters (assuming $detail->tour_id is an integer)
+                $stmt->bind_param("i", $detail->tour_id); // "i" for integer
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $pictures = $result->fetch_all(MYSQLI_ASSOC);
+                $picturesRows = count($pictures);
+                foreach ($pictures as $picture) {
+                    $i++;
+                    $content = $picture['content'] ?: $detail->name;
+                    ?>
+                    <a href="data/tour/pictures/<?= htmlspecialchars($picture['big_picture']) ?>" <?php if ($i == 1) {
+                          echo 'class="btn_photos"';
+                      } ?> title="<?= htmlspecialchars($content) ?>" data-effect="mfp-zoom-in">
+                        <?php if ($i == 1) {
+                            echo 'Tur Resimleri (' . $picturesRows . ' Adet)';
+                        } ?>
                     </a>
                 <?php } ?>
             </span>
@@ -63,7 +74,7 @@
                 <div class="col-lg-8">
                     <section id="description">
                         <h2>Tour Details</h2>
-                        <?= htmlspecialchars($detail->content) ?>
+                        <?= $detail->content ?> <!-- This will render the HTML tags correctly -->
                     </section>
 
                     <section id="reviews">
@@ -76,11 +87,15 @@
                 <aside class="col-lg-4" id="sidebar">
                     <div class="box_detail booking">
                         <div class="price">
-                            <?php 
-                                // Get the lowest price securely
-                                $stmt = $con->prepare("SELECT * FROM the_tour_date WHERE tour_id = ? ORDER BY person_price ASC LIMIT 1");
-                                $stmt->execute([$detail->tour_id]);
-                                $enkucukFiyat = $stmt->fetch();
+                            <?php
+                            // Get the lowest price securely
+                            $stmt = $con->prepare("SELECT * FROM the_tour_date WHERE tour_id = ? ORDER BY person_price ASC LIMIT 1");
+
+                            // Bind the parameters (assuming $detail->tour_id is an integer)
+                            $stmt->bind_param("i", $detail->tour_id);
+                            $stmt->execute();
+                            $result = $stmt->get_result();
+                            $enkucukFiyat = $result->fetch_object();
                             ?>
                             <span><?= htmlspecialchars($enkucukFiyat->person_price) ?> €</span>
                         </div>
@@ -92,14 +107,22 @@
                                 <div class="custom-select-form">
                                     <select class="wide" name="tour_dates">
                                         <option value="0">Datum auswählen</option>
-                                        <?php 
-                                            // Get all tour dates
-                                            $stmt = $con->prepare("SELECT * FROM the_tour_date WHERE tour_id = ?");
-                                            $stmt->execute([$detail->tour_id]);
-                                            $dates = $stmt->fetchAll();
-                                            foreach ($dates as $date) {
-                                        ?>
-                                            <option value="<?= htmlspecialchars($date->date_id) ?>"><?= timeTR($date->tour_start_date) ?> - <?= timeTR($date->tour_finish_date) ?> (<?= htmlspecialchars($date->tour_limit) ?>)</option>
+                                        <?php
+                                        // Get all tour dates
+                                        $stmt = $con->prepare("SELECT * FROM the_tour_date WHERE tour_id = ?");
+
+                                        // Bind the parameters (assuming $detail->tour_id is an integer)
+                                        $stmt->bind_param("i", $detail->tour_id);
+                                        $stmt->execute();
+                                        $result = $stmt->get_result();
+                                        $dates = $result->fetch_all(MYSQLI_ASSOC);
+                                        foreach ($dates as $date) {
+                                            ?>
+                                            <option value="<?= htmlspecialchars($date['date_id']) ?>">
+                                                <?= timeTR($date['tour_start_date']) ?> -
+                                                <?= timeTR($date['tour_finish_date']) ?>
+                                                (<?= htmlspecialchars($date['tour_limit']) ?>)
+                                            </option>
                                         <?php } ?>
                                     </select>
                                 </div>
@@ -118,7 +141,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <button class="btn_1 full-width purchase" type="submit" onclick="$.rezervasyonForm(<?= $detail->tour_id ?>)"> Reservieren </button>
+                            <button class="btn_1 full-width purchase" type="submit"
+                                onclick="$.rezervasyonForm(<?= $detail->tour_id ?>)"> Reservieren </button>
                         </form>
                         <div class="text-center"><small> Kinder ab 12 Jahren zahlen den vollen Preis.</small></div>
                     </div>
@@ -141,14 +165,14 @@
 
 <script src="lib/js/infobox.js"></script>
 <script>
-    $.rezervasyonForm = function() {
+    $.rezervasyonForm = function () {
         const deger = $("form#rez_one").serialize();
         $.ajax({
             url: "rezervasyonOne",
             type: "post",
             data: deger,
             dataType: "json",
-            success: function(cevap) {
+            success: function (cevap) {
                 if (cevap.hata) {
                     alert(cevap.hata);
                 } else {
@@ -162,20 +186,20 @@
 <script src="lib/js/moment.min.js"></script>
 <script src="lib/js/daterangepicker.js"></script>
 <script>
-    $(function() {
+    $(function () {
         $('input[name="dates"]').daterangepicker({
             autoUpdateInput: false,
             opens: 'left',
             locale: {
                 cancelLabel: 'Clear'
             }
-        }, function(start, end, label) {
+        }, function (start, end, label) {
             console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
         });
-        $('input[name="dates"]').on('apply.daterangepicker', function(ev, picker) {
+        $('input[name="dates"]').on('apply.daterangepicker', function (ev, picker) {
             $(this).val(picker.startDate.format('YYYY-MM-DD') + ' > ' + picker.endDate.format('YYYY-MM-DD'));
         });
-        $('input[name="dates"]').on('cancel.daterangepicker', function(ev, picker) {
+        $('input[name="dates"]').on('cancel.daterangepicker', function (ev, picker) {
             $(this).val('');
         });
     });
@@ -183,4 +207,4 @@
 
 <script src="lib/js/input_qty.js"></script>
 
-<?php require_once 'req/body_end.php'; ?> 
+<?php require_once 'req/body_end.php'; ?>

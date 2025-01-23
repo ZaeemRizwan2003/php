@@ -21,9 +21,9 @@
 
 header('Content-Type: text/html; charset=utf8');
 date_default_timezone_set('Europe/Istanbul');
-// error_reporting(E_ALL);
-// ini_set("display_errors", 1);
-error_reporting(0);
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+error_reporting(1);
 
 // MySQLi connection details
 $host = 'localhost';

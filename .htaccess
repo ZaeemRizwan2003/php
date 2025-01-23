@@ -4,8 +4,10 @@ Options +SymLinksIfOwnerMatch
 RewriteEngine on
 #rewritebase /
 
-RewriteCond %{SERVER_PORT} !=443
-RewriteRule ^ https://www.sungate24.com%{REQUEST_URI} [NS,R,L]
+# RewriteCond %{SERVER_PORT} !=443
+# RewriteRule ^ https://www.sungate24.com%{REQUEST_URI} [NS,R,L]
+php_flag display_errors on
+php_value error_reporting 32767
 
 
 RewriteRule ^faq$ sss.php [L]
@@ -88,5 +90,5 @@ RewriteRule ^faturaEdit$ app/req/ajax.php?do=user&q=fatura_edit
 
 ReWriteRule ^sitemap.xml sitemap.php
 RewriteRule ^404$ 404.php [L]
-ErrorDocument 404 https://www.sungate24.com/404
+# ErrorDocument 404 https://www.sungate24.com/404
 

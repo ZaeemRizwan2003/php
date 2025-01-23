@@ -1,18 +1,21 @@
 <?php require_once 'req/start.php'; ?>
 <?php require_once 'req/head_start.php'; ?>
-    <title>Hotels - <?= htmlspecialchars($general['site_title']->value) ?></title>
+<title>Hotels - <?= htmlspecialchars($general['site_title']->value) ?></title>
 
-<?php 
+<?php
 $stmt = $con->prepare("SELECT COUNT(*) FROM the_hotel WHERE status = 1");
 $stmt->execute();
-$sorgu = $stmt->fetchColumn();
+$result = $stmt->get_result();
+$row = $result->fetch_array();
+$sorgu = $row[0];
+
 ?>
 
 <?php require_once 'req/head.php'; ?>
 <?php require_once 'req/body_start.php'; ?>
 <?php require_once 'req/header.php'; ?>
 
-    <main>
+<main>
 
     <section class="hero_in hotels">
         <div class="wrapper">
@@ -131,91 +134,108 @@ $sorgu = $stmt->fetchColumn();
                     <div class="row">
 
                         <?php
-                            @$sayfa = $_GET["sayfa"];
-                            if (empty($sayfa) || !is_numeric($sayfa)){
-                                $sayfa = 1;
-                            }
-                            $kacar = 6;
-                            $ksayisi = $sorgu;
-                            $ssayisi = ceil($ksayisi / $kacar);
-                            $nereden = ($sayfa * $kacar) - $kacar;
-                            $stmt = $con->prepare("SELECT * FROM the_hotel LIMIT ? OFFSET ?");
-                            $stmt->execute([$kacar, $nereden]);
-                            $oteller = $stmt->fetchAll(PDO::FETCH_OBJ);
-                            
-                                foreach ($oteller as $otel){
-                                    if($otel->picture) {
-                                        $min_cover = 'data/hotel/' . $otel->picture;
-                                    }else{
-                                        $min_cover = 'data/no_hotel_pic.png';
-                                    }
-                                    $province = $otel->province;
-                                    $stmt = $con->prepare("SELECT * FROM il WHERE id = ?");
-                                    $stmt->execute([$province]);
-                                    $proSrc = $stmt->fetch();
-                                    
-                                    $stmt = $con->prepare("SELECT * FROM ilce WHERE id = ?");
-                                    $stmt->execute([$state]);
-                                    $staSrc = $stmt->fetch();
-                                    
-                        ?>
+                        @$sayfa = $_GET["sayfa"];
+                        if (empty($sayfa) || !is_numeric($sayfa)) {
+                            $sayfa = 1;
+                        }
+                        $kacar = 6;
+                        $ksayisi = $sorgu; // Total number of rows (fetched earlier)
+                        $ssayisi = ceil($ksayisi / $kacar);
+                        $nereden = ($sayfa * $kacar) - $kacar;
 
-                        <div class="col-md-4 isotope-item popular">
-                            <div class="box_grid pb-1">
-                                <figure>
-                                    <a href="otel/<?=$otel->slug?>/<?=$otel->hotel_id?>">
-                                        <img src="<?=$min_cover?>" class="img-fluid" alt="" width="800" height="533"><div class="read_more"><span>Lesen Sie mehr</span></div>
-                                    </a>
-                                    <small><?=$proSrc->il_adi?> - <?=$staSrc->ilce_adi?></small>
-                                </figure>
-                                <div class="wrapper">
-                                    <div class="cat_star"><?=hotelhomeStars($otel->stars)?></div>
-                                    <h5 style="font-size: 16px"><a href="otel/<?=$otel->slug?>/<?=$otel->hotel_id?>"><?=kisalt($otel->name,30)?></a></h5>
-                                    <!--<span class="price">From <strong>$54</strong> /pro Person</span> !-->
+                        // Prepare and bind parameters
+                        $stmt = $con->prepare("SELECT * FROM the_hotel LIMIT ? OFFSET ?");
+                        $stmt->bind_param("ii", $kacar, $nereden);
+                        $stmt->execute();
+
+                        // Fetch results
+                        $result = $stmt->get_result();
+                        $oteller = [];
+                        while ($row = $result->fetch_object()) {
+                            $oteller[] = $row;
+                        }
+
+                        // Now $oteller contains the list of hotels as objects
+                        
+                        foreach ($oteller as $otel) {
+                            if ($otel->picture) {
+                                $min_cover = 'data/hotel/' . $otel->picture;
+                            } else {
+                                $min_cover = 'data/no_hotel_pic.png';
+                            }
+                            $province = $otel->province;
+                            $stmt = $con->prepare("SELECT * FROM il WHERE id = ?");
+                            $stmt->bind_param("i", $province);
+                            $stmt->execute();
+                            $proSrc = $stmt->get_result()->fetch_object();
+
+                            $state = $otel->state; // Assuming 'state' is a property in $otel
+                            $stmt = $con->prepare("SELECT * FROM ilce WHERE id = ?");
+                            $stmt->bind_param("i", $state);
+                            $stmt->execute();
+                            $staSrc = $stmt->get_result()->fetch_object();
+                            ?>
+
+                            <div class="col-md-4 isotope-item popular">
+                                <div class="box_grid pb-1">
+                                    <figure>
+                                        <a href="otel/<?= $otel->slug ?>/<?= $otel->hotel_id ?>">
+                                            <img src="<?= $min_cover ?>" class="img-fluid" alt="" width="800" height="533">
+                                            <div class="read_more"><span>Lesen Sie mehr</span></div>
+                                        </a>
+                                        <small>
+                                            <?= isset($proSrc->il_adi) ? htmlspecialchars($proSrc->il_adi) : 'Unknown Province' ?>
+                                            -
+                                            <?= isset($staSrc->ilce_adi) ? htmlspecialchars($staSrc->ilce_adi) : 'Unknown District' ?>
+                                        </small>
+
+                                    </figure>
+                                    <div class="wrapper">
+                                        <div class="cat_star"><?= hotelhomeStars($otel->stars) ?></div>
+                                        <h5 style="font-size: 16px"><a
+                                                href="otel/<?= $otel->slug ?>/<?= $otel->hotel_id ?>"><?= kisalt($otel->name, 30) ?></a>
+                                        </h5>
+                                        <!--<span class="price">From <strong>$54</strong> /pro Person</span> !-->
+                                    </div>
+                                    <ul class="">
+                                        <li><i class="ti-eye"></i> <?= $otel->hit ?> View</li>
+                                        <!--<li><div class="score"><span>Punkte<em>350 Comment</em></span><strong>8.9</strong></div></li> !-->
+                                    </ul>
                                 </div>
-                                <ul class="">
-                                    <li><i class="ti-eye"></i> <?=$otel->hit?> View</li>
-                                    <!--<li><div class="score"><span>Punkte<em>350 Comment</em></span><strong>8.9</strong></div></li> !-->
-                                </ul>
                             </div>
-                        </div>
 
                         <?php } ?>
 
                     </div><!-- /row -->
-                    <?php if($ssayisi > 1){ ?>
+                    <?php if ($ssayisi > 1) { ?>
                         <div class="gap gap-small"></div>
                         <div class="col-md-12">
                             <nav class="text-center">
                                 <!--
                                     <ul class="pagination category-pagination ">
                                         <?php
-                                for($s = 1; $s <= $ssayisi; $s++) {
-                                    echo '<li class="page-item"><a class="page-link" href="hotels/'.$s.'#page_content_start">'.$s.' <i class="fa fa-angle-right"></i> </a></li>';
-                                }
-                                ?>
+                                        for ($s = 1; $s <= $ssayisi; $s++) {
+                                            echo '<li class="page-item"><a class="page-link" href="hotels/' . $s . '#page_content_start">' . $s . ' <i class="fa fa-angle-right"></i> </a></li>';
+                                        }
+                                        ?>
                                     </ul>
                                     !-->
 
                                 <hr>
                                 <ul class="pagination category-pagination ">
                                     <?php
-                                    if( $sayfa > 1 )
-                                    {
+                                    if ($sayfa > 1) {
                                         echo '<li class="page-item"><a class="page-link" href="hotels">Zuerst</a></li>';
                                     }
 
-                                    for( $i = $sayfa - 3; $i < $sayfa + 4; $i++ )
-                                    {
-                                        if( $i > 0 && $i <= $ssayisi )
-                                        {
-                                            echo '<li class=" page-item '.($i == $sayfa ? 'active' : '').'"><a class="page-link" href="hotels/'.$i.'">'.$i.'</a></li>';
+                                    for ($i = $sayfa - 3; $i < $sayfa + 4; $i++) {
+                                        if ($i > 0 && $i <= $ssayisi) {
+                                            echo '<li class=" page-item ' . ($i == $sayfa ? 'active' : '') . '"><a class="page-link" href="hotels/' . $i . '">' . $i . '</a></li>';
                                         }
                                     }
 
-                                    if( $sayfa != $ssayisi )
-                                    {
-                                        echo '<li class="page-item"><a class="page-link" href="hotels/'.($ssayisi).'">Letzte Seite</a></li>';
+                                    if ($sayfa != $ssayisi) {
+                                        echo '<li class="page-item"><a class="page-link" href="hotels/' . ($ssayisi) . '">Letzte Seite</a></li>';
                                     }
                                     ?>
                                 </ul>
@@ -232,6 +252,6 @@ $sorgu = $stmt->fetchColumn();
     <!-- /container -->
     <?php require_once 'inc/turlar.bottom.php'; ?>
 
-<?php require_once 'req/footer.php'; ?>
-<?php require_once 'req/script.php'; ?>
-<?php require_once 'req/body_end.php'; ?>
+    <?php require_once 'req/footer.php'; ?>
+    <?php require_once 'req/script.php'; ?>
+    <?php require_once 'req/body_end.php'; ?>

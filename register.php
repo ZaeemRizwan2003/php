@@ -1,7 +1,7 @@
 <?php require_once 'req/start.php'; ?>
 <?php require_once 'req/head_start.php'; ?>
-
 <title>Registrieren - <?= htmlspecialchars($general['site_title']->value) ?></title>
+
 <?php require_once 'req/head.php'; ?>
 <?php require_once 'req/script.php'; ?>
 
@@ -17,9 +17,10 @@
     <div id="login">
         <aside>
             <figure>
-                <a href="./"><img src="lib/img/logo_sticky.png" width="110" data-retina="true" alt="" class="logo_sticky"></a>
+                <a href="./"><img src="lib/img/logo_sticky.png" width="110" data-retina="true" alt=""
+                        class="logo_sticky"></a>
             </figure>
-            <form id="userRegisterForm" action="" onsubmit="return false" method="POST" >
+            <form id="userRegisterForm" action="" onsubmit="return false" method="POST">
                 <div class="form-group">
                     <label>Dein Name</label>
                     <input class="form-control" name="firstname" id="firstname" type="text">
@@ -41,8 +42,10 @@
                     <i class="icon_lock_alt"></i>
                 </div>
                 <div id="pass-info" class="clearfix"></div>
-                <input class="btn_1 rounded full-width add_top_30" onclick="userRegister();" type="submit" value="Jetzt registrieren!" />
-                <div class="text-center add_top_10">Hast du schon ein Konto? <strong><a href="login">Einloggen</a></strong></div>
+                <input class="btn_1 rounded full-width add_top_30" onclick="userRegister();" type="submit"
+                    value="Jetzt registrieren!" />
+                <div class="text-center add_top_10">Hast du schon ein Konto? <strong><a
+                            href="login">Einloggen</a></strong></div>
             </form>
             <div class="text-center"><a class="btn btn-primary" href="/"> <i class="fa fa-home"></i> Home</a></div>
             <div class="copy">© <?= date('Y') ?> Sungate24</div>
@@ -50,4 +53,4 @@
     </div>
     <!-- /login -->
 
-<?php require_once 'req/body_end.php'; ?>
+    <?php require_once 'req/body_end.php'; ?>

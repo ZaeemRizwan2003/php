@@ -1,12 +1,13 @@
 <?php require_once 'req/start.php'; ?>
 <?php require_once 'req/head_start.php'; ?>
+
 <?php
 $link = g('link');
-$stmt = $con->prepare("SELECT * FROM the_tour WHERE slug = :slug");
-$stmt->bindParam(':slug', $link, PDO::PARAM_STR);
+$stmt = $con->prepare("SELECT * FROM the_tour WHERE slug = ?");
+$stmt->bind_param('s', $link);
 $stmt->execute();
-$detail = $stmt->fetch();
-
+$result = $stmt->get_result();
+$detail = $result->fetch_object();
 ?>
 
 <meta name="author" content="Ansonika">
@@ -18,9 +19,9 @@ $detail = $stmt->fetch();
 
 <main>
     <style>
-    .hero_in.tours_detail:before {
-        background-image: url('data/tour/<?= htmlspecialchars($detail->picture) ?>');
-    }
+        .hero_in.tours_detail:before {
+            background-image: url('data/tour/<?= htmlspecialchars($detail->picture) ?>');
+        }
     </style>
     <section class="hero_in tours_detail">
         <div class="wrapper">
@@ -28,20 +29,22 @@ $detail = $stmt->fetch();
                 <h1 class="fadeInUp"><span></span> <?= htmlspecialchars($detail->name) ?> </h1>
             </div>
             <span class="magnific-gallery">
-                <?php 
-                    $i = 0;
-                    $stmt = $con->prepare("SELECT * FROM the_tour_picture WHERE tour_id = ?");
-                    $stmt->bind_param("i", $detail->tour_id);
-                    $stmt->execute();
-                    $pictures = $stmt->get_result();
-                    $picturesRows = $pictures->num_rows;
-                    while ($picture = $pictures->fetch_object()) {
-                        $i++;
-                        $content = $picture->content ?: $detail->name;
-                ?>
-                <a href="data/tour/pictures/<?= htmlspecialchars($picture->big_picture) ?>" <?php if($i == 1) echo 'class="btn_photos"'; ?> title="<?= htmlspecialchars($content) ?>" data-effect="mfp-zoom-in">
-                    <?php if($i == 1) echo 'Tur Resimleri (' . $picturesRows . ' Adet)'; ?>
-                </a>
+                <?php
+                $i = 0;
+                $stmt = $con->prepare("SELECT * FROM the_tour_picture WHERE tour_id = ?");
+                $stmt->bind_param("i", $detail->tour_id);
+                $stmt->execute();
+                $pictures = $stmt->get_result();
+                $picturesRows = $pictures->num_rows;
+                while ($picture = $pictures->fetch_object()) {
+                    $i++;
+                    $content = $picture->content ?: $detail->name;
+                    ?>
+                    <a href="data/tour/pictures/<?= htmlspecialchars($picture->big_picture) ?>" <?php if ($i == 1)
+                          echo 'class="btn_photos"'; ?> title="<?= htmlspecialchars($content) ?>" data-effect="mfp-zoom-in">
+                        <?php if ($i == 1)
+                            echo 'Tur Resimleri (' . $picturesRows . ' Adet)'; ?>
+                    </a>
                 <?php } ?>
             </span>
         </div>
@@ -69,18 +72,19 @@ $detail = $stmt->fetch();
                 <aside class="col-lg-4" id="sidebar">
                     <div class="box_detail booking">
                         <div class="price">
-                            <?php 
-                                $stmt = $con->prepare("SELECT * FROM the_tour_date WHERE tour_id = ? ORDER BY person_price ASC LIMIT 1");
-                                $stmt->bind_param("i", $detail->tour_id);
-                                $stmt->execute();
-                                $enkucukFiyat = $stmt->get_result()->fetch_object();
+                            <?php
+                            $stmt = $con->prepare("SELECT * FROM the_tour_date WHERE tour_id = ? ORDER BY person_price ASC LIMIT 1");
+                            $stmt->bind_param("i", $detail->tour_id);
+                            $stmt->execute();
+                            $enkucukFiyat = $stmt->get_result()->fetch_object();
                             ?>
                             <span><?= htmlspecialchars($enkucukFiyat->person_price) ?> € <small></small></span>
                         </div>
                         <form id="rez_one" method="POST" action="" class="user-form payment">
                             <input type="hidden" name="rez_type" value="tour">
                             <input type="hidden" name="tour_id" value="<?= htmlspecialchars($detail->tour_id) ?>">
-                            <button class="btn_1 full-width purchase" type="submit" onclick="$.rezervasyonForm(<?= htmlspecialchars($detail->tour_id) ?>)">Reservieren</button>
+                            <button class="btn_1 full-width purchase" type="submit"
+                                onclick="$.rezervasyonForm(<?= htmlspecialchars($detail->tour_id) ?>)">Reservieren</button>
                         </form>
                     </div>
                 </aside>
